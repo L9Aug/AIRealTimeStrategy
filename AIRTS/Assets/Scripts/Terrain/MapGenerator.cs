@@ -4,11 +4,17 @@ using System.Collections.Generic;
 
 public class MapGenerator : MonoBehaviour {
 
+    [Tooltip("The number of tiles you want horizontally.")]
     public int x;
+
+    [Tooltip("The number of tiles you want vertically.")]
     public int y;
+
+    [Tooltip("The tile prefab that you want to use for the map.")]
     public HexTile TerrainTile;
     public static HexTile[,] Map;
 
+    [Tooltip("The framerate that you want the generation to run at.\nAt 0 it will generate it in one frame.")]
     public float TargetFrameRate;
 
     float FrameStartTime = 0;
