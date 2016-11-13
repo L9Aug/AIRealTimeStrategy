@@ -22,7 +22,7 @@ public class UnitProduction : BuildingBase {
     /// The products required for this building to function.
     /// </summary>
     [Tooltip("The products required for this building to function.")]
-    public List<InputRequirements> inputRequirements = new List<InputRequirements>();
+    public List<inputRequirements> InputRequirements = new List<inputRequirements>();
 
     /// <summary>
     /// Product storage whilst this build is producing a product.

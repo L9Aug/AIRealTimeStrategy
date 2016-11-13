@@ -22,6 +22,13 @@ public class BuildingBase : MonoBehaviour {
     public Buildings BuildingType;
 
     /// <summary>
+    /// The tier of this building.
+    /// </summary>
+    [Tooltip("The tier of this building.")]
+    [Range(0, 4)]
+    public int Tier;
+
+    /// <summary>
     /// The size of this building.
     /// </summary>
     [Tooltip("The Size of this building.")]
@@ -60,7 +67,7 @@ public class BuildingBase : MonoBehaviour {
     #region Public Classes
 
     [System.Serializable]
-    public class InputRequirements
+    public class inputRequirements
     {
         public List<Products> RequiredProducts = new List<Products>();
     }
