@@ -47,6 +47,14 @@ public class BuildingBase : MonoBehaviour {
     [Tooltip("The current health this building has.")]
     public float Health;
 
+    /// <summary>
+    /// The mode of production.
+    /// ie. Will a barracks make Soldiers(0) or Arhers(1).
+    /// 0 by default.
+    /// </summary>
+    [Tooltip("The mode of production.\nie. Will a barracks make Soldiers(0) or Arhers(1).\n0 by default.")]
+    public int ProductionMode = 0;
+
     #endregion
 
     #region Public Classes
@@ -70,4 +78,16 @@ public class BuildingBase : MonoBehaviour {
     {
 	
 	}
+
+    #region Public Functions
+
+    
+
+    #endregion
+
+    #region Protected Functions
+
+
+
+    #endregion
 }

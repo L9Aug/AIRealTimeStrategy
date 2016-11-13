@@ -10,7 +10,7 @@ public class Production : ProductionBase {
     /// The products required for this building to function.
     /// </summary>
     [Tooltip("The products required for this building to function.")]
-    public InputRequirements inputRequirements;
+    public List<Products> InputRequirements = new List<Products>();
 
     /// <summary>
     /// Product storage whilst this build is producing a product.
