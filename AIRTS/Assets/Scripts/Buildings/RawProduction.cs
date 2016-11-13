@@ -10,7 +10,17 @@ public class RawProduction : ProductionBase {
     /// The terrain/s required for this building to perform.
     /// </summary>
     [Tooltip("The terrain/s required for this building to perform.")]
-    public List<TerrainTypes> TerrainRequirement = new List<TerrainTypes>();
+    public List<TerrainMode> TerrainRequirement = new List<TerrainMode>();
+
+    #endregion
+
+    #region Classes
+
+    [System.Serializable]
+    public class TerrainMode
+    {
+        public List<TerrainTypes> TerrainRequirment = new List<TerrainTypes>();
+    }
 
     #endregion
 
