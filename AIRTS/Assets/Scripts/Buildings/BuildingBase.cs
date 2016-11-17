@@ -9,6 +9,8 @@ public class BuildingBase : MonoBehaviour {
 
     #region Public Variables
 
+    public HexTransform hexTransform;
+
     /// <summary>
     /// The ID of the team that this building belongs to.
     /// </summary>
@@ -20,6 +22,13 @@ public class BuildingBase : MonoBehaviour {
     /// </summary>
     [Tooltip("The type of building this is.")]
     public Buildings BuildingType;
+
+    /// <summary>
+    /// The tier of this building.
+    /// </summary>
+    [Tooltip("The tier of this building.")]
+    [Range(0, 4)]
+    public int Tier;
 
     /// <summary>
     /// The size of this building.
@@ -60,7 +69,7 @@ public class BuildingBase : MonoBehaviour {
     #region Public Classes
 
     [System.Serializable]
-    public class InputRequirements
+    public class inputRequirements
     {
         public List<Products> RequiredProducts = new List<Products>();
     }
@@ -81,7 +90,15 @@ public class BuildingBase : MonoBehaviour {
 
     #region Public Functions
 
-    
+    public void ConfigureBuilding(int Q, int R)
+    {
+        hexTransform = new HexTransform(Q, R);
+    }
+
+    public void ConfigureBuilding(float Q, float R)
+    {
+        ConfigureBuilding((int)Q, (int)R);
+    }
 
     #endregion
 
