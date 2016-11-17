@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-public class AITeamBase : MonoBehaviour {
+public class AITeamBase : MonoBehaviour
+{
 
     #region Public Variables
 
@@ -70,7 +71,7 @@ public class AITeamBase : MonoBehaviour {
 
     #endregion
 
-    #region Protected Functions
+    #region Public Functions
 
     /// <summary>
     /// Attempts to construct the chosen building.
@@ -80,32 +81,47 @@ public class AITeamBase : MonoBehaviour {
     /// <returns>Returns true if the building can and is being built.</returns>
     public bool ConstructBuilding(Buildings building, Vector2 Location)
     {
+        // Check to see if the tile is on the map.
         if (ValidateLocation(Location))
         {
-            print("Valid Location");
-            int BuildingSize = GlobalAttributes.Global.Buildings[(int)building].Size;
-            if (ValidateArea(Location, BuildingSize))
+            int buildingTier = GlobalAttributes.Global.Buildings[(int)building].Tier;
+            // Check to see if the team has the required Resources.
+            if (CheckResources(buildingTier))
             {
-                print("Valid Area");
-                int buildingTier = GlobalAttributes.Global.Buildings[(int)building].Tier;
-                if (CheckResources(buildingTier))
+                int BuildingSize = GlobalAttributes.Global.Buildings[(int)building].Size;
+                // Check to see if there is space for the building.
+                if (ValidateArea(Location, BuildingSize))
                 {
-                    print("Valid Resources");
+                    // Create the building in the requested position and add it to this teams building list.
                     Vector3 BuildingPos = MapGenerator.Map[(int)Location.x, (int)Location.y].transform.position;
                     BuildingsList.Add((BuildingBase)Instantiate(GlobalAttributes.Global.Buildings[(int)building], BuildingPos, Quaternion.identity, transform));
 
-                    //deduct resources.
+                    // Deduct resources.
                     DeductResources(buildingTier);
 
-                    //set exlusion zone
+                    // Set exlusion zone
                     SetExlusionZone(Location, BuildingSize);
 
-                    //clear Connections.
+                    // Clear Connections.
                     ClearArea(Location, BuildingSize);
+
+                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location.x, Location.y);
 
                     return true;
                 }
+                else
+                {
+                    Debug.LogWarning("Insufficient space for building. Team: " + TeamID);
+                }
             }
+            else
+            {                
+                Debug.LogWarning("Insufficient resources for building. Team: " + TeamID);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Invalid central tile. Team: " + TeamID);
         }
 
         return false;
@@ -115,36 +131,54 @@ public class AITeamBase : MonoBehaviour {
 
     #region Private Functions
 
-    void SetExlusionZone(Vector2 loc, int buildingSize)
+    /// <summary>
+    /// Sets an exclusion zone around the building.
+    /// </summary>
+    /// <param name="loc">The location of the building</param>
+    /// <param name="buildingSize">The size of the exlusion zone</param>
+    private void SetExlusionZone(Vector2 loc, int buildingSize)
     {
         List<HexTile> BuildingRing = MapGenerator.Map[(int)loc.x, (int)loc.y].GetHexRing(buildingSize + 1);
-        foreach(HexTile h in BuildingRing)
+        foreach (HexTile h in BuildingRing)
         {
             h.IsExlusionZone = true;
+            h.SetColour(Color.yellow);
         }
     }
 
-    void ClearArea(Vector2 loc, int buildingSize)
+    /// <summary>
+    /// Removes Connctions from tiles under the building.
+    /// </summary>
+    /// <param name="loc">The location of the building.</param>
+    /// <param name="buildingSize">The size of the building.</param>
+    private void ClearArea(Vector2 loc, int buildingSize)
     {
         List<HexTile> BuildingArea = MapGenerator.Map[(int)loc.x, (int)loc.y].GetHexArea(buildingSize);
-        foreach(HexTile h in BuildingArea)
+        foreach (HexTile h in BuildingArea)
         {
             h.ClearConnections();
         }
     }
 
-    void DeductResources(int tier)
+    /// <summary>
+    /// Deducts the Required resources for the building.
+    /// </summary>
+    /// <param name="tier">The tier of the building being created.</param>
+    private void DeductResources(int tier)
     {
         Gold -= tier;
         Population.CitizenCount -= tier;
-        if(tier == 4)
+        //Dispatch Builders
+
+        if (tier == 4)
         {
             Population.MerchantCount -= 1;
+            //Dispatch Merchant.
         }
     }
 
     /// <summary>
-    /// Tests to see if there is enough Space for the building.
+    /// Tests to see if there is enough space for the building.
     /// </summary>
     /// <param name="loc">The location of the building.</param>
     /// <param name="buildingSize">The size of the building.</param>
@@ -152,7 +186,10 @@ public class AITeamBase : MonoBehaviour {
     private bool ValidateArea(Vector2 loc, int buildingSize)
     {
         int AreaCount = MapGenerator.Map[(int)loc.x, (int)loc.y].GetHexArea(buildingSize).Count;
-        int RequiredArea = (int)((3 * Mathf.Pow(buildingSize - 1, 2)) + (3 * (buildingSize - 1)) + 1); //Hex Number equation 3n^2 + 3n + 1 from Wolfram Alpha : http://mathworld.wolfram.com/HexNumber.html
+
+        //Hex Number equation 3n^2 + 3n + 1 from Wolfram Alpha : http://mathworld.wolfram.com/HexNumber.html
+        int RequiredArea = (int)((3 * Mathf.Pow(buildingSize - 1, 2)) + (3 * (buildingSize - 1)) + 1);
+
         if (AreaCount >= RequiredArea)
         {
             return true;
@@ -167,19 +204,15 @@ public class AITeamBase : MonoBehaviour {
     /// <returns>Returns true if the team has the required resources.</returns>
     private bool CheckResources(int BuildingTier)
     {
-        if(Gold >= BuildingTier && Population.CitizenCount >= BuildingTier)
+        if (Gold >= BuildingTier && Population.CitizenCount >= BuildingTier)
         {
-            if(BuildingTier == 4)
+            if (BuildingTier == 4)
             {
-                if(Population.MerchantCount >= 1)
+                if (Population.MerchantCount >= 1)
                 {
-
-                    //dispatch merchant and pop to building site.
                     return true;
                 }
             }
-
-            // dispatch pop to building site.
             return true;
         }
         return false;
@@ -192,7 +225,7 @@ public class AITeamBase : MonoBehaviour {
     /// <returns>Returns true if it exists.</returns>
     private bool ValidateLocation(Vector2 loc)
     {
-        if(loc.x < MapGenerator.Map.GetLength(0) && loc.y < MapGenerator.Map.GetLength(1))
+        if (loc.x < MapGenerator.Map.GetLength(0) && loc.y < MapGenerator.Map.GetLength(1))
         {
             return true;
         }
@@ -213,9 +246,9 @@ public class AITeamBaseEditor : Editor
         base.OnInspectorGUI();
         AITeamBase myTarget = (AITeamBase)target;
 
-        if(GUILayout.Button("Create Building"))
+        if (GUILayout.Button("Create Building"))
         {
-            Debug.Log(myTarget.ConstructBuilding(myTarget.TestSpawn, new Vector2(myTarget.x, myTarget.y)));
+            myTarget.ConstructBuilding(myTarget.TestSpawn, new Vector2(myTarget.x, myTarget.y));
         }
     }
 

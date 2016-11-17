@@ -9,6 +9,8 @@ public class BuildingBase : MonoBehaviour {
 
     #region Public Variables
 
+    public HexTransform hexTransform;
+
     /// <summary>
     /// The ID of the team that this building belongs to.
     /// </summary>
@@ -88,7 +90,15 @@ public class BuildingBase : MonoBehaviour {
 
     #region Public Functions
 
-    
+    public void ConfigureBuilding(int Q, int R)
+    {
+        hexTransform = new HexTransform(Q, R);
+    }
+
+    public void ConfigureBuilding(float Q, float R)
+    {
+        ConfigureBuilding((int)Q, (int)R);
+    }
 
     #endregion
 
