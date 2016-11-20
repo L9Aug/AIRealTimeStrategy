@@ -88,6 +88,12 @@ public class BaseBuilding : MonoBehaviour
 
     #endregion
 
+    #region Private
+
+    float ConstructionTimer = 0;
+
+    #endregion
+
     #endregion
 
     #region Classes
@@ -174,6 +180,75 @@ public class BaseBuilding : MonoBehaviour
     }
 
     public virtual void BuildingUpdate() { }
+
+    #endregion
+
+    #region Private
+
+    private void BeginConstruction()
+    {
+
+    }
+
+    private void ConstructionUpdate()
+    {
+
+    }
+
+    private void OperationalUpdate()
+    {
+
+    }
+
+    private bool HasConstructionFinished()
+    {
+        if(ConstructionTimer <= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private void SetUpStateMachine()
+    {
+        // Create state machine.
+        BuildingStateMachine = new SM.StateMachine();
+
+        // Create States.
+        SM.State UnderConstruction = new SM.State();
+        SM.State Operational = new SM.State();
+
+        // Create Transitions.
+        SM.Transition ConstructionFinished = new SM.Transition();
+
+        // Add States to state machine.
+        BuildingStateMachine.States.Add(UnderConstruction);
+        BuildingStateMachine.States.Add(Operational);
+
+        // Set up Initial state for the state machine.
+        BuildingStateMachine.InitialState = BuildingStateMachine.States[0];
+
+        // Add actions to states.
+        UnderConstruction.EntryActions.Add(BeginConstruction);
+        UnderConstruction.Actions.Add(ConstructionUpdate);
+        Operational.Actions.Add(OperationalUpdate);
+
+        // Add actions to trnasitions.
+
+        // Add transitions to states.
+        UnderConstruction.Transitions.Add(ConstructionFinished);
+
+        // Add target states to transistions.
+        ConstructionFinished.TargetState = Operational;
+
+        // Configure Transistion requiremnts.
+        SM.BoolCondition ConstructionCondition = new SM.BoolCondition();
+        ConstructionCondition.Condition = HasConstructionFinished;
+        ConstructionFinished.condition = ConstructionCondition;
+
+        // Initialise the machine.
+        BuildingStateMachine.InitMachine();
+    }
 
     #endregion
 

@@ -20,11 +20,12 @@ namespace SM
         public void InitMachine()
         {
             CurrentState = InitialState;
-            for (int i = 0; i < CurrentState.EntryActions.Count; ++i)
+
+            foreach(Action action in CurrentState.EntryActions)
             {
-                CurrentState.EntryActions[i]();
+                action();
             }
-            Debug.Log(CurrentState.StateName);
+
         }
 
         public void SMUpdate()
@@ -46,18 +47,30 @@ namespace SM
             if (triggeredTransition != null)
             {
                 State targetState = triggeredTransition.TargetState;
-                ReturnList.AddRange(CurrentState.ExitActions);
-                ReturnList.AddRange(triggeredTransition.Actions);
-                ReturnList.AddRange(targetState.EntryActions);
+
+                if (CurrentState.ExitActions.Count > 0)
+                {
+                    ReturnList.AddRange(CurrentState.ExitActions);
+                }
+
+                if (triggeredTransition.Actions.Count > 0)
+                {
+                    ReturnList.AddRange(triggeredTransition.Actions);
+                }
+
+                if (targetState.EntryActions.Count > 0)
+                {
+                    ReturnList.AddRange(targetState.EntryActions);
+                }
 
                 CurrentState = targetState;
-
-                Debug.Log(triggeredTransition.TransistionName);
-                Debug.Log(CurrentState.StateName);
             }
             else // If no transition has happened continue with this states actions.
             {
-                ReturnList.AddRange(CurrentState.Actions);
+                if (CurrentState.Actions.Count > 0)
+                {
+                    ReturnList.AddRange(CurrentState.Actions);
+                }
             }
             
             foreach(Action a in ReturnList)
