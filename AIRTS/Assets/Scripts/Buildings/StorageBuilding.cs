@@ -2,7 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class StorageBuilding : BuildingBase {
+public class StorageBuilding : BaseBuilding
+{
 
     #region Public Variables
 
@@ -15,8 +16,8 @@ public class StorageBuilding : BuildingBase {
     /// <summary>
     /// The items stored in this buildings.
     /// </summary>
-    [Tooltip("The items stored in this buildings.")]
-    public List<Products> ItemsStored = new List<Products>();
+    [HideInInspector]
+    public List<StorageItem> ItemsStored = new List<StorageItem>();
 
     #endregion
 

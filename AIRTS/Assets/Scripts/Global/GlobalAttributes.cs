@@ -41,7 +41,7 @@ public class GlobalAttributes : MonoBehaviour
     /// In order according to the Buildings enum.
     /// </summary>
     [Tooltip("List of all building prefabs, in order according to the buildings enum.\nBuilding prefabs must be named acroding to the enum (Camel case and no spaces)")]
-    public List<BuildingBase> Buildings = new List<BuildingBase>();
+    public List<BaseBuilding> Buildings = new List<BaseBuilding>();
 
     private void Start()
     {
@@ -67,7 +67,7 @@ public class GlobalAttributesEditor : Editor
 
     void SortBuildings(GlobalAttributes GA)
     {
-        List<BuildingBase> tempList = new List<BuildingBase>();
+        List<BaseBuilding> tempList = new List<BaseBuilding>();
         for(int i = 0; i < GA.Buildings.Count; ++i)
         {
             tempList.Add(GA.Buildings.Find(x => x.name == ((Buildings)i).ToString()));

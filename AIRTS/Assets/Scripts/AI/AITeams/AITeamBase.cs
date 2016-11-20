@@ -33,7 +33,7 @@ public class AITeamBase : MonoBehaviour
     /// A list of the buildings that this team has.
     /// </summary>
     [Tooltip("A list of buildings that this team has.")]
-    public List<BuildingBase> BuildingsList = new List<BuildingBase>();
+    public List<BaseBuilding> BuildingsList = new List<BaseBuilding>();
 
     //Temp
     public int x;
@@ -94,34 +94,35 @@ public class AITeamBase : MonoBehaviour
                 {
                     // Create the building in the requested position and add it to this teams building list.
                     Vector3 BuildingPos = MapGenerator.Map[(int)Location.x, (int)Location.y].transform.position;
-                    BuildingsList.Add((BuildingBase)Instantiate(GlobalAttributes.Global.Buildings[(int)building], BuildingPos, Quaternion.identity, transform));
+                    BuildingsList.Add((BaseBuilding)Instantiate(GlobalAttributes.Global.Buildings[(int)building], BuildingPos, Quaternion.identity, transform));
+
+                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location);
 
                     // Deduct resources.
                     DeductResources(buildingTier);
 
                     // Set exlusion zone
-                    SetExlusionZone(Location, BuildingSize);
+                    SetExlusionZone(BuildingsList[BuildingsList.Count -1]);
 
                     // Clear Connections.
-                    ClearArea(Location, BuildingSize);
+                    ClearArea(BuildingsList[BuildingsList.Count - 1]);
 
-                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location.x, Location.y);
 
                     return true;
                 }
                 else
                 {
-                    Debug.LogWarning("Insufficient space for building. Team: " + TeamID);
+                    Debug.LogWarning("Insufficient space for building: " + building.ToString() + ". Team: " + TeamID);
                 }
             }
             else
             {                
-                Debug.LogWarning("Insufficient resources for building. Team: " + TeamID);
+                Debug.LogWarning("Insufficient resources for building: " + building.ToString() + ". Team: " + TeamID);
             }
         }
         else
         {
-            Debug.LogWarning("Invalid central tile. Team: " + TeamID);
+            Debug.LogWarning("Tile is not part of the map. Team: " + TeamID);
         }
 
         return false;
@@ -134,12 +135,11 @@ public class AITeamBase : MonoBehaviour
     /// <summary>
     /// Sets an exclusion zone around the building.
     /// </summary>
-    /// <param name="loc">The location of the building</param>
-    /// <param name="buildingSize">The size of the exlusion zone</param>
-    private void SetExlusionZone(Vector2 loc, int buildingSize)
+    /// <param name="Building">The building</param>
+    private void SetExlusionZone(BaseBuilding Building)
     {
-        List<HexTile> BuildingRing = MapGenerator.Map[(int)loc.x, (int)loc.y].GetHexRing(buildingSize + 1);
-        foreach (HexTile h in BuildingRing)
+        Building.exclusionZone = MapGenerator.Map[(int)Building.hexTransform.Q, (int)Building.hexTransform.R].GetHexRing(Building.Size + 1);
+        foreach (HexTile h in Building.exclusionZone)
         {
             h.IsExlusionZone = true;
             h.SetColour(Color.yellow);
@@ -151,10 +151,10 @@ public class AITeamBase : MonoBehaviour
     /// </summary>
     /// <param name="loc">The location of the building.</param>
     /// <param name="buildingSize">The size of the building.</param>
-    private void ClearArea(Vector2 loc, int buildingSize)
+    private void ClearArea(BaseBuilding Building)
     {
-        List<HexTile> BuildingArea = MapGenerator.Map[(int)loc.x, (int)loc.y].GetHexArea(buildingSize);
-        foreach (HexTile h in BuildingArea)
+        Building.BuildingArea = MapGenerator.Map[(int)Building.hexTransform.Q, (int)Building.hexTransform.R].GetHexArea(Building.Size);
+        foreach (HexTile h in Building.BuildingArea)
         {
             h.ClearConnections();
         }
@@ -250,6 +250,7 @@ public class AITeamBaseEditor : Editor
         {
             myTarget.ConstructBuilding(myTarget.TestSpawn, new Vector2(myTarget.x, myTarget.y));
         }
+
     }
 
 }

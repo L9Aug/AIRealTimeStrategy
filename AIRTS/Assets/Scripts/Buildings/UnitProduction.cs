@@ -2,15 +2,24 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class UnitProduction : BuildingBase {
+public class UnitProduction : BaseProduction
+{
 
-    #region Public Variables
+    #region Variables
+
+    #region Public
 
     /// <summary>
-    /// The time it takes to generate the product.
+    /// The products required for this building to function.
     /// </summary>
-    [Tooltip("The time it takes to generate the product.")]
-    public float ProductionTime;
+    [Tooltip("The Products required for this building to function.")]
+    public List<InputRequirements> ProductionRequirements = new List<InputRequirements>();
+
+    /// <summary>
+    /// Storage for products that are using in production
+    /// </summary>
+    [HideInInspector]
+    public List<Products> ProductionStorage = new List<Products>();
 
     /// <summary>
     /// The unit/s that this building creates.
@@ -18,27 +27,27 @@ public class UnitProduction : BuildingBase {
     [Tooltip("The unit/s that this building creates.")]
     public List<UnitOutputClass> UnitOutput = new List<UnitOutputClass>();
 
-    /// <summary>
-    /// The products required for this building to function.
-    /// </summary>
-    [Tooltip("The products required for this building to function.")]
-    public List<inputRequirements> InputRequirements = new List<inputRequirements>();
-
-    /// <summary>
-    /// Product storage whilst this build is producing a product.
-    /// </summary>
-    [Tooltip("Product storage whilst this build is producing a product.")]
-    public List<Products> InputStorage = new List<Products>();
+    #endregion
 
     #endregion
 
     #region Classes
+
+    #region Public
 
     [System.Serializable]
     public class UnitOutputClass
     {
         public List<Units> Units = new List<Units>();
     }
+
+    [System.Serializable]
+    public class InputRequirements
+    {
+        public List<Products> RequiredProducts = new List<Products>();
+    }
+
+    #endregion
 
     #endregion
 }
