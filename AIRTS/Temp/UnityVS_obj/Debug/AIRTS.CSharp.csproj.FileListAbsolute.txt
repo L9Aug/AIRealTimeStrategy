@@ -1,0 +1,13 @@
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_obj\Debug\AIRTS.CSharp.csprojResolveAssemblyReference.cache
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\Assembly-CSharp.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\Assembly-CSharp.pdb
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEditor.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.Networking.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.UI.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.xml
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.UI.xml
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEngine.Networking.xml
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_bin\Debug\UnityEditor.xml
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_obj\Debug\Assembly-CSharp.dll
+C:\Users\Scott\Desktop\3rd Year Projects\AI\RTS\AIRealTimeStrategy\AIRTS\Temp\UnityVS_obj\Debug\Assembly-CSharp.pdb

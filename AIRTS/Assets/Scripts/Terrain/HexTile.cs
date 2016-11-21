@@ -17,6 +17,15 @@ public class HexTransform
     public int y;
     public int z;
 
+    /// <summary>
+    /// The combined row and column position.
+    /// </summary>
+    public Vector2 rowColumn;
+    /// <summary>
+    /// The hex grid x y z position.
+    /// </summary>
+    public Vector3 position;
+
     public HexTransform(int X, int Y, int Z)
     {
         x = X;
@@ -25,6 +34,9 @@ public class HexTransform
 
         Q = x;
         R = z + (x - (x & 1)) / 2;
+
+        rowColumn = new Vector2(Q, R);
+        position = new Vector3(x, y, z);
     }
 
     public HexTransform(int q, int r)
@@ -35,6 +47,9 @@ public class HexTransform
         x = Q;
         z = R - ((Q - (Q & 1)) / 2);
         y = -x - z;
+
+        rowColumn = new Vector2(Q, R);
+        position = new Vector3(x, y, z);
     }
 
     /// <summary>
@@ -80,6 +95,25 @@ public class HexTile : MonoBehaviour
 
     public List<HexTile> Connections = new List<HexTile>();
 
+	public AStarInfo ASI;
+    public DijkstraInfo DI;
+
+    public float traverseSpeed;
+
+    public class AStarInfo
+    {
+        public HexTile root;
+        public float ETC;
+        public float costSoFar;
+        public float heuristic;
+    }
+
+    public class DijkstraInfo
+    {
+        public HexTile root;
+        public float costSoFar;
+    }
+	
     /// <summary>
     /// Configure the tile parameters using columna nd row data.
     /// </summary>
