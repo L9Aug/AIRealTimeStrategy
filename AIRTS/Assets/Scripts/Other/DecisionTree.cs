@@ -14,9 +14,4 @@ namespace DT
 
     }
 
-    public interface ICondition
-    {
-        
-    }
-
 }

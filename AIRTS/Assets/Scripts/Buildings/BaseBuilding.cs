@@ -15,6 +15,12 @@ public class BaseBuilding : MonoBehaviour
     public HexTransform hexTransform;
 
     /// <summary>
+    /// The gameobject that has the 3D model under it.
+    /// </summary>
+    [Tooltip("The gameobject that has the 3D model under it.")]
+    public GameObject OperationalModelData;
+
+    /// <summary>
     /// The tiles that make up the exclusion zone for this building.
     /// </summary>
     [HideInInspector]
@@ -90,7 +96,15 @@ public class BaseBuilding : MonoBehaviour
 
     #region Private
 
-    float ConstructionTimer = 0;
+    /// <summary>
+    /// The time left for the construction of the building.
+    /// </summary>
+    private float ConstructionTimer = 0;
+
+    /// <summary>
+    /// The object that hold the 3D model data for construction. 
+    /// </summary>
+    private GameObject ConstructionObject;
 
     #endregion
 
@@ -187,17 +201,29 @@ public class BaseBuilding : MonoBehaviour
 
     private void BeginConstruction()
     {
+        // Create appropriate 3D model for being under construction.
 
+        // Hide the operational model data.
+        OperationalModelData.SetActive(false);
+
+        ConstructionTimer = ConstructionTime;
     }
 
     private void ConstructionUpdate()
     {
+        ConstructionTimer -= Time.deltaTime;
+    }
+
+    private void BeginOperational()
+    {
+        // Here change the update the model to the actual building model rather than the construction model.
+        OperationalModelData.SetActive(true);
 
     }
 
     private void OperationalUpdate()
     {
-
+        BuildingUpdate();
     }
 
     private bool HasConstructionFinished()
@@ -211,40 +237,30 @@ public class BaseBuilding : MonoBehaviour
 
     private void SetUpStateMachine()
     {
-        // Create state machine.
-        BuildingStateMachine = new SM.StateMachine();
-
-        // Create States.
-        SM.State UnderConstruction = new SM.State();
-        SM.State Operational = new SM.State();
+        // Configure Transistion requiremnts.
+        Condition.BoolCondition ConstructionCondition = new Condition.BoolCondition();
+        ConstructionCondition.Condition = HasConstructionFinished;
 
         // Create Transitions.
-        SM.Transition ConstructionFinished = new SM.Transition();
+        SM.Transition ConstructionFinished = new SM.Transition("Construction Finished", ConstructionCondition, new List<SM.Action>());
 
-        // Add States to state machine.
-        BuildingStateMachine.States.Add(UnderConstruction);
-        BuildingStateMachine.States.Add(Operational);
+        // Create States.
+        SM.State UnderConstruction = new SM.State("Under Construction", 
+            new List<SM.Transition>() { ConstructionFinished }, 
+            new List<SM.Action>() { BeginConstruction },
+            new List<SM.Action>() { ConstructionUpdate },
+            null);
 
-        // Set up Initial state for the state machine.
-        BuildingStateMachine.InitialState = BuildingStateMachine.States[0];
+        SM.State Operational = new SM.State("Operational",
+            null,
+            new List<SM.Action>() { BeginOperational },
+            new List<SM.Action>() { OperationalUpdate },
+            null);
 
-        // Add actions to states.
-        UnderConstruction.EntryActions.Add(BeginConstruction);
-        UnderConstruction.Actions.Add(ConstructionUpdate);
-        Operational.Actions.Add(OperationalUpdate);
+        // Add target state to transitions
+        ConstructionFinished.SetTargetState(Operational);
 
-        // Add actions to trnasitions.
-
-        // Add transitions to states.
-        UnderConstruction.Transitions.Add(ConstructionFinished);
-
-        // Add target states to transistions.
-        ConstructionFinished.TargetState = Operational;
-
-        // Configure Transistion requiremnts.
-        SM.BoolCondition ConstructionCondition = new SM.BoolCondition();
-        ConstructionCondition.Condition = HasConstructionFinished;
-        ConstructionFinished.condition = ConstructionCondition;
+        BuildingStateMachine = new SM.StateMachine(null, UnderConstruction, Operational);    
 
         // Initialise the machine.
         BuildingStateMachine.InitMachine();
@@ -256,19 +272,20 @@ public class BaseBuilding : MonoBehaviour
 
     #region StateMachines
 
-    SM.StateMachine BuildingStateMachine;
+    protected SM.StateMachine BuildingStateMachine;
 
     #endregion
 
     // Use this for initialization
     void Start ()
     {
-	
-	}
+        SetUpStateMachine();
+    }
 	
 	// Update is called once per frame
 	void Update ()
     {
-	
+        BuildingStateMachine.SMUpdate();
 	}
+
 }
