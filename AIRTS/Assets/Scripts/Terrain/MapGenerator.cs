@@ -85,6 +85,8 @@ public class MapGenerator : MonoBehaviour {
         }
 
         print("Made " + numCons + " connections in " + (Time.realtimeSinceStartup - connectionsStartTime) + " seconds. Total Generation Time " + (Time.realtimeSinceStartup - GenStartTime) + " seconds.");
+        FindObjectOfType<TerrainGenerator>().StartGen();
+        //FindObjectOfType<MapToJpeg>().jpeg();
     }
 
 }
