@@ -92,9 +92,9 @@ public class AEqualsB : ICondition
     }
 }
 
-public class NullGameobject : ICondition
+public class NullObject<T> : ICondition
 {
-    public GameObject obj;
+    public T obj;
 
     public bool Test()
     {
@@ -167,13 +167,14 @@ public class ListNotNullCond<T> : ICondition
         return trigger;
     }
 
-    public class ListAllTrueCond: ICondition
+    public class ListBoolsAll: ICondition
     {
         public List<bool> list;
+        public bool lookingFor;
 
         public bool Test()
         {
-            if (list.Contains(false))
+            if (list.Contains(!lookingFor))
                 return false;
             else
                 return true;

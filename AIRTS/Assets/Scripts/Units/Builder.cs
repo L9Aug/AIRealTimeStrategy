@@ -18,9 +18,7 @@ public class Builder : BaseUnit
     AndCondition positionCorrect = new AndCondition(); 
     AEqualsB columnCorrect = new AEqualsB();
     AEqualsB rowCorrect = new AEqualsB();
-
-
-
+    
     AGreaterThanB buildTimeComplete = new AGreaterThanB();
 
 	// Use this for initialization

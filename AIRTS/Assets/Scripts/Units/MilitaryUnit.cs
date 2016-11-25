@@ -31,12 +31,12 @@ public class MilitaryUnit : BaseUnit
     #endregion
 
     #region Conditions
-    NullGameobject targetNull = new NullGameobject(); // For lost target
+    NullObject<GameObject> targetNull = new NullObject<GameObject>(); // For lost target
     
     // For enemy out of range
     AndCondition targetOutOfRange = new AndCondition(); 
     NotCondition haveTarget = new NotCondition();
-    NullGameobject targetNotNull = new NullGameobject();
+    NullObject<GameObject> targetNotNull = new NullObject<GameObject>();
     AGreaterThanB outOfRange = new AGreaterThanB();
 
     // Cancel attack needs a condition, not sure what it is
