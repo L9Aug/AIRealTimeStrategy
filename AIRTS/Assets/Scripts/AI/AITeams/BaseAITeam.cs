@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-public class AITeamBase : MonoBehaviour
+public class BaseAITeam : MonoBehaviour
 {
 
     #region Public Variables
@@ -73,6 +73,15 @@ public class AITeamBase : MonoBehaviour
 
     #region Public Functions
 
+    public bool FindProuct(HexTransform MyPos, out HexTransform ClosestBuilding, params Products[] products)
+    {
+        ClosestBuilding = MyPos;
+
+        // do stuff like search buildings or whatever.
+
+        return false;
+    }
+
     /// <summary>
     /// Attempts to construct the chosen building.
     /// </summary>
@@ -138,11 +147,11 @@ public class AITeamBase : MonoBehaviour
     /// <param name="Building">The building</param>
     private void SetExlusionZone(BaseBuilding Building)
     {
-        Building.exclusionZone = MapGenerator.Map[(int)Building.hexTransform.Q, (int)Building.hexTransform.R].GetHexRing(Building.Size + 1);
+        Building.exclusionZone = MapGenerator.Map[(int)Building.hexTransform.RowColumn.x, (int)Building.hexTransform.RowColumn.y].GetHexRing(Building.Size + 1);
         foreach (HexTile h in Building.exclusionZone)
         {
             h.IsExlusionZone = true;
-            h.SetColour(Color.yellow);
+            //h.SetColour(Color.yellow);
         }
     }
 
@@ -153,7 +162,7 @@ public class AITeamBase : MonoBehaviour
     /// <param name="buildingSize">The size of the building.</param>
     private void ClearArea(BaseBuilding Building)
     {
-        Building.BuildingArea = MapGenerator.Map[(int)Building.hexTransform.Q, (int)Building.hexTransform.R].GetHexArea(Building.Size);
+        Building.BuildingArea = MapGenerator.Map[(int)Building.hexTransform.RowColumn.x, (int)Building.hexTransform.RowColumn.y].GetHexArea(Building.Size);
         foreach (HexTile h in Building.BuildingArea)
         {
             h.ClearConnections();
@@ -238,13 +247,13 @@ public class AITeamBase : MonoBehaviour
 
 
 #if UNITY_EDITOR
-[CustomEditor(typeof(AITeamBase))]
+[CustomEditor(typeof(BaseAITeam))]
 public class AITeamBaseEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        AITeamBase myTarget = (AITeamBase)target;
+        BaseAITeam myTarget = (BaseAITeam)target;
 
         if (GUILayout.Button("Create Building"))
         {

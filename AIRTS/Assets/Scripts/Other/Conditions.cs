@@ -1,58 +1,131 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Condition
 {
+
+    public delegate float FloatParameter();
+
+    public delegate bool BoolParameter();
 
     public interface ICondition
     {
         bool Test();
     }
 
-    /// <summary>
-    /// Test Value between Min and Max values
-    /// </summary>
     public class FloatCondition : ICondition
     {
-        public float MinValue;
-        public float MaxValue;
+        public float minValue;
+        public float maxValue;
 
-        public delegate float FloatParam();
-        public FloatParam TestValue;
+        public FloatParameter TestValue;
 
-        bool ICondition.Test()
+        public bool Test()
         {
-            return (MinValue <= TestValue()) && (TestValue() <= MaxValue);
+            return minValue <= TestValue() && TestValue() <= maxValue;
         }
     }
 
-    /// <summary>
-    /// A less than or equal to B
-    /// </summary>
-    public class LessThanFloatCondition : ICondition
+    public class AndCondition : ICondition
     {
-        public delegate float FloatParam();
-        public FloatParam A;
-        public FloatParam B;
+        public ICondition A;
+        public ICondition B;
 
-        bool ICondition.Test()
+        public bool Test()
         {
-            return A() <= B();
+            return A.Test() && B.Test();
         }
     }
 
-    /// <summary>
-    /// A greater than or equal to B
-    /// </summary>
-    public class GreaterThanFloatCondition : ICondition
+    public class OrCondition : ICondition
     {
-        public delegate float FloatParam();
-        public FloatParam A;
-        public FloatParam B;
+        public ICondition A;
+        public ICondition B;
 
-        bool ICondition.Test()
+        public bool Test()
         {
-            return A() >= B();
+            return A.Test() || B.Test();
+        }
+    }
+
+    public class NotCondition : ICondition
+    {
+        public ICondition condition;
+        public bool Test()
+        {
+            return !condition.Test();
+        }
+    }
+
+    public class ALessThanB : ICondition
+    {
+        public float A = 0;
+        public float B = 0;
+
+        public bool Test()
+        {
+            return A < B;
+        }
+    }
+
+    public class AGreaterThanB : ICondition
+    {
+        public float A;
+        public float B;
+
+        public bool Test()
+        {
+            return A > B;
+        }
+    }
+
+    public class AEqualsB : ICondition
+    {
+        public float A;
+        public float B;
+
+        public bool Test()
+        {
+            return A == B;
+        }
+    }
+
+    public class NullObject<T> : ICondition
+    {
+        public T obj;
+
+        public bool Test()
+        {
+            if (obj == null)
+                return true;
+            else
+                return false;
+        }
+    }
+
+    public class SingleResetBool : ICondition
+    {
+        public bool A;
+
+        public bool Test()
+        {
+            bool result = A;
+
+            if (A)
+                A = false;
+            return result;
+        }
+    }
+
+    public class SingleBool : ICondition
+    {
+        public bool A;
+
+        public bool Test()
+        {
+            return A;
         }
     }
 
@@ -67,49 +140,57 @@ namespace Condition
         }
     }
 
-    public class AndCondition : ICondition
+    public class ListHasDataCond<T> : ICondition
     {
-        public ICondition ConditionA;
-        public ICondition ConditionB;
-
-        bool ICondition.Test()
+        public List<T> A;
+        public bool Test()
         {
-            return ConditionA.Test() && ConditionB.Test();
+            if (A.Count > 0)
+                return true;
+            else
+                return false;
         }
     }
 
-    public class OrCondition : ICondition
+    public class ListNotNullCond<T> : ICondition
     {
-        public ICondition ConditionA;
-        public ICondition ConditionB;
+        public List<T> list;
 
-        bool ICondition.Test()
+        public bool Test()
         {
-            return ConditionA.Test() || ConditionB.Test();
+            bool trigger = true;
+            if (list.Count > 0)
+            {
+                for (int i = 0; i < list.Count; ++i)
+                {
+                    if (list[i] == null)
+                    {
+                        trigger = false;
+                        break;
+                    }
+                }
+                return trigger;
+            }
+            else
+            {
+                return false;
+            }
+            return trigger;
+        }
+
+        public class ListBoolsAll : ICondition
+        {
+            public List<bool> list;
+            public bool lookingFor;
+
+            public bool Test()
+            {
+                if (list.Contains(!lookingFor))
+                    return false;
+                else
+                    return true;
+            }
         }
     }
 
-    public class NotCondition : ICondition
-    {
-        public ICondition Condition;
-
-        bool ICondition.Test()
-        {
-            return !Condition.Test();
-        }
-    }
-
-    /// <summary>
-    /// True if null
-    /// </summary>
-    public class NullCondition : ICondition
-    {
-        public delegate object ObjectParam();
-        public ObjectParam Condition;
-
-        bool ICondition.Test()
-        {
-            return Condition() == null;
-        }
-    }
 }

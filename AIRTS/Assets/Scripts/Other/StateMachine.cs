@@ -221,7 +221,7 @@ namespace SM
         /// <param name="actions">Any actions that should be performed whist transitioning.</param>
         public Transition(string name, Condition.ICondition condition, List<Action> actions)
         {
-            SetupTransition(name, condition, actions.ToArray() ?? null);
+            SetupTransition(name, condition, actions.ToArray());
         }
 
         /// <summary>
@@ -233,6 +233,18 @@ namespace SM
         public Transition(string name, Condition.ICondition condition, params Action[] actions)
         {
             SetupTransition(name, condition, actions);
+        }
+
+        public Transition(string name, Condition.ICondition condition, State targetState, params Action[] actions)
+        {
+            SetupTransition(name, condition, actions);
+            SetTargetState(targetState);
+        }
+
+        public Transition(string name, Condition.ICondition condition, State targetState, List<Action> actions)
+        {
+            SetupTransition(name, condition, actions.ToArray());
+            SetTargetState(targetState);
         }
 
         public void SetTargetState(State targetState)

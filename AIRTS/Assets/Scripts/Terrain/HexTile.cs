@@ -6,35 +6,40 @@ using System.Collections.Generic;
 public class HexTransform
 {
     /// <summary>
-    /// The Column of that this tile is in.
+    /// The combined row and column position.
     /// </summary>
-    public int Q;
+    public Vector2 RowColumn;
     /// <summary>
-    /// the Row that this tile is in.
+    /// The hex grid x y z position.
     /// </summary>
-    public int R;
-    public int x;
-    public int y;
-    public int z;
+    public Vector3 Position;
 
-    public HexTransform(int X, int Y, int Z)
+    public HexTransform(Vector3 position)
     {
-        x = X;
-        y = Y;
-        z = Z;
-
-        Q = x;
-        R = z + (x - (x & 1)) / 2;
+        RowColumn = new Vector2(position.x, position.z + (position.x - ((int)position.x & 1)) / 2);
+        Position = position;
     }
 
-    public HexTransform(int q, int r)
+    public HexTransform(Vector2 rowColumn)
     {
-        Q = q;
-        R = r;
+        float z = rowColumn.x - ((rowColumn.y - ((int)rowColumn.y & 1)) / 2);
 
-        x = Q;
-        z = R - ((Q - (Q & 1)) / 2);
-        y = -x - z;
+        RowColumn = rowColumn;
+        Position = new Vector3(rowColumn.x, -rowColumn.x - z, z);
+    }
+    
+    public HexTransform(int X, int Y, int Z)
+    {
+        RowColumn = new Vector2(X, Z + (X - (X & 1)) / 2);
+        Position = new Vector3(X, Y, Z);
+    }
+
+    public HexTransform(int Q, int R)
+    {
+        int z = R - ((Q - (Q & 1)) / 2);
+
+        RowColumn = new Vector2(Q, R);
+        Position = new Vector3(Q, -Q - z, z);
     }
 
     /// <summary>
@@ -44,17 +49,17 @@ public class HexTransform
     /// <returns></returns>
     public int CalcHexManhattanDist(HexTransform TargetTile)
     {
-        return (int)((Mathf.Abs(TargetTile.x - x) + Mathf.Abs(TargetTile.y - y) + Mathf.Abs(TargetTile.z - z)) / 2f);
+        return (int)((Mathf.Abs(TargetTile.Position.x - Position.x) + Mathf.Abs(TargetTile.Position.y - Position.y) + Mathf.Abs(TargetTile.Position.z - Position.z)) / 2f);
     }
 
-    public HexTransform CubetoOddQ(int X, int Y, int Z)
+    public HexTransform CubetoOddQ(float X, float Y, float Z)
     {
-        return new HexTransform(X, Y, Z);
+        return new HexTransform(new Vector3(X, Y, Z));
     }
 
     public bool validateOddQ()
     {
-        if (Q >= 0 && Q < MapGenerator.Map.GetLength(0) && R >= 0 && R < MapGenerator.Map.GetLength(1))
+        if (RowColumn.x >= 0 && RowColumn.x < MapGenerator.Map.GetLength(0) && RowColumn.y >= 0 && RowColumn.y < MapGenerator.Map.GetLength(1))
         {
             return true;
         }
@@ -63,7 +68,7 @@ public class HexTransform
 
     public bool validateOddQ(HexTransform testCon)
     {
-        if (testCon.Q >= 0 && testCon.Q < MapGenerator.Map.GetLength(0) && testCon.R >= 0 && testCon.R < MapGenerator.Map.GetLength(1))
+        if (testCon.RowColumn.x >= 0 && testCon.RowColumn.x < MapGenerator.Map.GetLength(0) && testCon.RowColumn.y >= 0 && testCon.RowColumn.y < MapGenerator.Map.GetLength(1))
         {
             return true;
         }
@@ -74,18 +79,54 @@ public class HexTransform
 
 public class HexTile : MonoBehaviour
 {
+    #region Variables
+
+    #region Public
+
     public HexTransform hexTransform;
-
+    public TerrainTypes TerrainType;
     public bool IsExlusionZone = false;
-
     public List<HexTile> Connections = new List<HexTile>();
+	public AStarInfo ASI;
+    public DijkstraInfo DI;
+    public float traverseSpeed;
+
+    #endregion
+
+    #endregion
+
+    #region Classes
+
+    #region Public
+
+    public class AStarInfo
+    {
+        public HexTile root;
+        public float ETC;
+        public float costSoFar;
+        public float heuristic;
+    }
+
+    public class DijkstraInfo
+    {
+        public HexTile root;
+        public float costSoFar;
+    }
+
+    #endregion
+
+    #endregion
+
+    #region Functions
+
+    #region Public
 
     /// <summary>
     /// Configure the tile parameters using columna nd row data.
     /// </summary>
     /// <param name="q">The Column of the tile.</param>
     /// <param name="r">The Row of the tile.</param>
-	public void ConfigureTile(int q, int r)
+    public void ConfigureTile(int q, int r)
     {
         hexTransform = new HexTransform(q, r);
     }
@@ -95,23 +136,23 @@ public class HexTile : MonoBehaviour
         Connections.Clear();
         HexTransform testCon = new HexTransform(0, 0);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x + 1, hexTransform.y, hexTransform.z - 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x + 1, hexTransform.Position.y, hexTransform.Position.z - 1);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x + 1, hexTransform.y, hexTransform.z);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x + 1, hexTransform.Position.y, hexTransform.Position.z);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x, hexTransform.y, hexTransform.z + 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x, hexTransform.Position.y, hexTransform.Position.z + 1);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x - 1, hexTransform.y, hexTransform.z + 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x - 1, hexTransform.Position.y, hexTransform.Position.z + 1);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x - 1, hexTransform.y, hexTransform.z);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x - 1, hexTransform.Position.y, hexTransform.Position.z);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
-        testCon = testCon.CubetoOddQ(hexTransform.x, hexTransform.y, hexTransform.z - 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[testCon.Q, testCon.R]);
+        testCon = testCon.CubetoOddQ(hexTransform.Position.x, hexTransform.Position.y, hexTransform.Position.z - 1);
+        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
 
         return Connections.Count;
     }    
@@ -125,11 +166,6 @@ public class HexTile : MonoBehaviour
     {
         GetConnections();
     }    
-
-    void OnMouseDown()
-    {
-
-    }
 
     /// <summary>
     /// Returns the specified area.
@@ -158,31 +194,6 @@ public class HexTile : MonoBehaviour
     }
 
     /// <summary>
-    /// Calculates the specified area.
-    /// </summary>
-    /// <param name="Center">The center of the area you want to search.</param>
-    /// <param name="Radius">The radius of the area.</param>
-    /// <param name="list">A reference to a list that will contain the area.</param>
-    private void GetHexArea(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ClosedList)
-    {
-        if (Connections.Count != 0 && !IsExlusionZone) list.Add(this);
-
-        foreach(HexTile c in Connections)
-        {
-            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
-
-            if (dist < Radius)
-            {
-                if (!ClosedList.Contains(c) && !list.Contains(c))
-                {
-                    ClosedList.Add(c);
-                    c.GetHexArea(Center, Radius, ref list, ref ClosedList);
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Returns a list of tiles that make up the specified hex ring.
     /// </summary>
     /// <param name="Center">The center of the ring.</param>
@@ -206,39 +217,7 @@ public class HexTile : MonoBehaviour
     public List<HexTile> GetHexRing(int Radius)
     {
         return GetHexRing(this, Radius);
-    }
-
-    /// <summary>
-    /// Calcualtes a hex ring of the specified dimentions from a tile.
-    /// </summary>
-    /// <param name="Center">The center of the ring.</param>
-    /// <param name="Radius">The radius of the ring.</param>
-    /// <param name="list">A reference to a list that will contain the hex ring.</param>
-    /// <param name="ignoreList">A reference to a list that will store the tiles leading up to the ring.(stops it from checking the same tile more than once)</param>
-    private void GetHexRing(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ignoreList)
-    {
-        foreach (HexTile c in Connections)
-        {
-            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
-
-            if (dist + 1 == Radius) // if the connection is on the ring add it to the list and search it's connections.
-            {
-                if (!list.Contains(c))
-                {
-                    list.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
-                }
-            }
-            else if (dist <= Radius) // if the connection is in the area of the ring add it to the ignore list and search it's connections.
-            {
-                if (!ignoreList.Contains(c))
-                {
-                    ignoreList.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
-                }
-            }
-        }
-    }
+    }    
 
     /// <summary>
     /// Returns a list of tiles that make up the specified hex ring.
@@ -254,6 +233,51 @@ public class HexTile : MonoBehaviour
         GetHexRing(Center, Radius, ref ReturnList, ref IgnoreList);
 
         return ReturnList;
+    }    
+
+    /// <summary>
+    /// Set the colour of this tile.
+    /// </summary>
+    /// <param name="colour">The Colour you want to set it to.</param>
+    public void SetColour(Color colour)
+    {
+        GetComponent<Renderer>().material.color = colour;
+    }
+
+
+    public void SetTexture(TerrainTypes terrain)
+    {
+        GetComponent<Renderer>().material.mainTexture = Resources.Load<Texture>("Textures/" + terrain.ToString());
+    }
+
+
+    #endregion
+
+    #region Private
+
+    /// <summary>
+    /// Calculates the specified area.
+    /// </summary>
+    /// <param name="Center">The center of the area you want to search.</param>
+    /// <param name="Radius">The radius of the area.</param>
+    /// <param name="list">A reference to a list that will contain the area.</param>
+    private void GetHexArea(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ClosedList)
+    {
+        if (Connections.Count != 0 && !IsExlusionZone) list.Add(this);
+
+        foreach (HexTile c in Connections)
+        {
+            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
+
+            if (dist < Radius)
+            {
+                if (!ClosedList.Contains(c) && !list.Contains(c))
+                {
+                    ClosedList.Add(c);
+                    c.GetHexArea(Center, Radius, ref list, ref ClosedList);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -289,12 +313,38 @@ public class HexTile : MonoBehaviour
     }
 
     /// <summary>
-    /// Set the colour of this tile.
+    /// Calcualtes a hex ring of the specified dimentions from a tile.
     /// </summary>
-    /// <param name="colour">The Colour you want to set it to.</param>
-    public void SetColour(Color colour)
+    /// <param name="Center">The center of the ring.</param>
+    /// <param name="Radius">The radius of the ring.</param>
+    /// <param name="list">A reference to a list that will contain the hex ring.</param>
+    /// <param name="ignoreList">A reference to a list that will store the tiles leading up to the ring.(stops it from checking the same tile more than once)</param>
+    private void GetHexRing(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ignoreList)
     {
-        GetComponent<Renderer>().material.color = colour;
+        foreach (HexTile c in Connections)
+        {
+            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
+
+            if (dist + 1 == Radius) // if the connection is on the ring add it to the list and search it's connections.
+            {
+                if (!list.Contains(c))
+                {
+                    list.Add(c);
+                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                }
+            }
+            else if (dist <= Radius) // if the connection is in the area of the ring add it to the ignore list and search it's connections.
+            {
+                if (!ignoreList.Contains(c))
+                {
+                    ignoreList.Add(c);
+                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                }
+            }
+        }
     }
 
+    #endregion
+
+    #endregion
 }
