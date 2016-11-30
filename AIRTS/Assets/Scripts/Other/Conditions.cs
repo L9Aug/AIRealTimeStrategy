@@ -17,14 +17,22 @@ namespace Condition
 
     public class FloatCondition : ICondition
     {
-        public float minValue;
-        public float maxValue;
-
+        public float MinValue;
+        public float MaxValue;
         public FloatParameter TestValue;
+
+        public FloatCondition() { }
+
+        public FloatCondition(float minValue, float maxValue, FloatParameter testValue)
+        {
+            MinValue = minValue;
+            MaxValue = maxValue;
+            TestValue = testValue;
+        }
 
         public bool Test()
         {
-            return minValue <= TestValue() && TestValue() <= maxValue;
+            return MinValue <= TestValue() && TestValue() <= MaxValue;
         }
     }
 
@@ -32,6 +40,14 @@ namespace Condition
     {
         public ICondition A;
         public ICondition B;
+
+        public AndCondition() { }
+
+        public AndCondition(ICondition a, ICondition b)
+        {
+            A = a;
+            B = b;
+        }
 
         public bool Test()
         {
@@ -44,6 +60,14 @@ namespace Condition
         public ICondition A;
         public ICondition B;
 
+        public OrCondition() { }
+
+        public OrCondition(ICondition a, ICondition b)
+        {
+            A = a;
+            B = b;
+        }
+
         public bool Test()
         {
             return A.Test() || B.Test();
@@ -52,87 +76,105 @@ namespace Condition
 
     public class NotCondition : ICondition
     {
-        public ICondition condition;
+        public ICondition Condition;
+
+        public NotCondition() { }
+
+        public NotCondition(ICondition condition)
+        {
+            Condition = condition;
+        }
+
         public bool Test()
         {
-            return !condition.Test();
+            return !Condition.Test();
         }
     }
 
     public class ALessThanB : ICondition
     {
-        public float A = 0;
-        public float B = 0;
+        public FloatParameter A;
+        public FloatParameter B;
+
+        public ALessThanB() { }
+
+        public ALessThanB(FloatParameter a, FloatParameter b)
+        {
+            A = a;
+            B = b;
+        }
 
         public bool Test()
         {
-            return A < B;
+            return A() < B();
         }
     }
 
     public class AGreaterThanB : ICondition
     {
-        public float A;
-        public float B;
+        public FloatParameter A;
+        public FloatParameter B;
+
+        public AGreaterThanB() { }
+
+        public AGreaterThanB(FloatParameter a, FloatParameter b)
+        {
+            A = a;
+            B = b;
+        }
 
         public bool Test()
         {
-            return A > B;
+            return A() > B();
         }
     }
 
     public class AEqualsB : ICondition
     {
-        public float A;
-        public float B;
+        public FloatParameter A;
+        public FloatParameter B;
+
+        public AEqualsB() { }
+
+        public AEqualsB(FloatParameter a, FloatParameter b)
+        {
+            A = a;
+            B = b;
+        }
 
         public bool Test()
         {
-            return A == B;
+            return A() == B();
         }
     }
 
     public class NullObject<T> : ICondition
     {
-        public T obj;
+        public T Obj;
 
-        public bool Test()
+        public NullObject() { }
+
+        public NullObject(T obj)
         {
-            if (obj == null)
-                return true;
-            else
-                return false;
+            Obj = obj;
         }
-    }
-
-    public class SingleResetBool : ICondition
-    {
-        public bool A;
-
+       
         public bool Test()
         {
-            bool result = A;
-
-            if (A)
-                A = false;
-            return result;
-        }
-    }
-
-    public class SingleBool : ICondition
-    {
-        public bool A;
-
-        public bool Test()
-        {
-            return A;
+            return ((Obj == null) ? true : false);
         }
     }
 
     public class BoolCondition : ICondition
     {
-        public delegate bool BoolParam();
-        public BoolParam Condition;
+        public BoolParameter Condition;
+
+        public BoolCondition() { }
+
+        public BoolCondition(BoolParameter condition)
+        {
+            Condition = condition;
+        }
 
         bool ICondition.Test()
         {
@@ -142,54 +184,39 @@ namespace Condition
 
     public class ListHasDataCond<T> : ICondition
     {
-        public List<T> A;
+        public List<T> TestList;
+
+        public ListHasDataCond() { }
+
+        public ListHasDataCond(ref List<T> list)
+        {
+            TestList = list;
+        }
+
         public bool Test()
         {
-            if (A.Count > 0)
-                return true;
-            else
-                return false;
+            return (TestList.Count > 0) ? true : false;
         }
     }
 
-    public class ListNotNullCond<T> : ICondition
+    public class HexPositionEqual : ICondition
     {
-        public List<T> list;
+        public delegate HexTransform GetHexTransform();
+
+        public GetHexTransform PositionA;
+        public GetHexTransform PositionB;
+
+        public HexPositionEqual() { }
+
+        public HexPositionEqual(GetHexTransform positionA, GetHexTransform positionB)
+        {
+            PositionA = positionA;
+            PositionB = positionB;
+        }
 
         public bool Test()
         {
-            bool trigger = true;
-            if (list.Count > 0)
-            {
-                for (int i = 0; i < list.Count; ++i)
-                {
-                    if (list[i] == null)
-                    {
-                        trigger = false;
-                        break;
-                    }
-                }
-                return trigger;
-            }
-            else
-            {
-                return false;
-            }
-            return trigger;
-        }
-
-        public class ListBoolsAll : ICondition
-        {
-            public List<bool> list;
-            public bool lookingFor;
-
-            public bool Test()
-            {
-                if (list.Contains(!lookingFor))
-                    return false;
-                else
-                    return true;
-            }
+            return (PositionA().Position == PositionB().Position) ? true : false;
         }
     }
 

@@ -55,8 +55,8 @@ public class Courier : BaseUnit
 
     void SetupStateMachine()
     {
-        shoppingNotEmpty.condition = shoppingListEmpty;
-        inventoryNotFull.condition = inventoryFull;
+        shoppingNotEmpty.Condition = shoppingListEmpty;
+        inventoryNotFull.Condition = inventoryFull;
         canFindMore.A = shoppingNotEmpty;
         canFindMore.B = inventoryNotFull;
 

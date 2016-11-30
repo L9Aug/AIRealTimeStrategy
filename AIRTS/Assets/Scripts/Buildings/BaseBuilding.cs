@@ -2,17 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class BaseBuilding : MonoBehaviour
+public class BaseBuilding : GameEntity
 {
 
     #region Variables
 
     #region Public 
-
-    /// <summary>
-    /// This Tiles HexTransform.
-    /// </summary>
-    public HexTransform hexTransform;
 
     /// <summary>
     /// The gameobject that has the 3D model under it.
@@ -37,12 +32,6 @@ public class BaseBuilding : MonoBehaviour
     /// </summary>
     [HideInInspector]
     public List<HexTile> BuildingArea = new List<HexTile>();
-
-    /// <summary>
-    /// The ID of the team that this building belongs to.
-    /// </summary>
-    [Tooltip("The ID of the team that this building belongs to.")]
-    public float TeamID;
 
     /// <summary>
     /// The type of building that this is.
@@ -70,18 +59,6 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("The time it takes to build this building.\n T0 : 0s\n T1 : 5s\n T2 : 10s\n T3 : 20s\n T4 : 40s")]
     [Range(0, 40)]
     public float ConstructionTime;
-
-    /// <summary>
-    /// The maximum health this building can have.
-    /// </summary>
-    [Tooltip("The maximum health this building can have.")]
-    public float MaxHealth;
-
-    /// <summary>
-    /// The current health this building has.
-    /// </summary>
-    [Tooltip("The current health this building has.")]
-    public float Health;
 
     /// <summary>
     /// The mode of production.

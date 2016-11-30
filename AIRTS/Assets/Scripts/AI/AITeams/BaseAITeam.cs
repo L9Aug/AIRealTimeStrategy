@@ -18,6 +18,12 @@ public class BaseAITeam : MonoBehaviour
     public int TeamID = 0;
 
     /// <summary>
+    /// The starting location for this team.
+    /// </summary>
+    [Tooltip("The starting location for this team.")]
+    public Vector2 StartingLocation;
+
+    /// <summary>
     /// The amount of gold this team has.
     /// </summary>
     [Tooltip("The amout of gold this team has.")]
@@ -43,6 +49,7 @@ public class BaseAITeam : MonoBehaviour
     #endregion
 
     #region Classes
+
     [System.Serializable]
     public class PopulationClass
     {
@@ -69,17 +76,43 @@ public class BaseAITeam : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Like an Argos ticket but better.
+    /// </summary>
+    public class KalamataTicket
+    {
+        public Products Product;
+        public BaseBuilding ProductOwner;
+        public HexTransform ProductPosition;
+        public float ReservationID;
+
+        public KalamataTicket(Products product, BaseBuilding productOwner, float reservationID)
+        {
+            Product = product;
+            ProductOwner = productOwner;
+            ProductPosition = ProductOwner.hexTransform;
+            ReservationID = reservationID;
+        }
+    }
+
     #endregion
 
     #region Public Functions
 
-    public bool FindProuct(HexTransform MyPos, out HexTransform ClosestBuilding, params Products[] products)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="MyPos"></param>
+    /// <param name="products"></param>
+    /// <returns>A list of products and their locations, empty if no products were found.</returns>
+    public List<KalamataTicket> FindProuct(HexTransform MyPos, params Products[] products)
     {
-        ClosestBuilding = MyPos;
+        List<KalamataTicket> productTickets = new List<KalamataTicket>();
+
 
         // do stuff like search buildings or whatever.
 
-        return false;
+        return productTickets;
     }
 
     /// <summary>
@@ -241,6 +274,7 @@ public class BaseAITeam : MonoBehaviour
         return false;
     }
 
+
     #endregion
 
 }
@@ -250,16 +284,17 @@ public class BaseAITeam : MonoBehaviour
 [CustomEditor(typeof(BaseAITeam))]
 public class AITeamBaseEditor : Editor
 {
+
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
         BaseAITeam myTarget = (BaseAITeam)target;
+
+        base.OnInspectorGUI();
 
         if (GUILayout.Button("Create Building"))
         {
             myTarget.ConstructBuilding(myTarget.TestSpawn, new Vector2(myTarget.x, myTarget.y));
         }
-
     }
 
 }

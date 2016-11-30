@@ -3,16 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using SM;
 
-public class BaseUnit : MonoBehaviour
+public class BaseUnit : GameEntity
 {
     public enum unitType { civilian, military, sacrifice };
-
-    public int TeamID;
+    
     public unitType type;
-    public HexTransform hexTransform;
     public string unitName;
     public float moveSpeed;
-    public float health;
     public int visionRadius;
     public StateMachine unitStateMachine;
 

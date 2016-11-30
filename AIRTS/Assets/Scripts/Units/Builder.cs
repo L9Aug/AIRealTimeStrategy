@@ -12,9 +12,7 @@ public class Builder : BaseUnit
     State moveToBuildingSite;
     State returnHome;
 
-    AndCondition positionCorrect = new AndCondition();
-    AEqualsB columnCorrect = new AEqualsB();
-    AEqualsB rowCorrect = new AEqualsB();
+    BoolCondition positionCorrect = new BoolCondition();
 
     AGreaterThanB buildTimeComplete = new AGreaterThanB();
 
@@ -36,32 +34,19 @@ public class Builder : BaseUnit
         path = ASImplementation.ASI.AStar(MapGenerator.Map[(int)hexTransform.RowColumn.x, (int)hexTransform.RowColumn.y], MapGenerator.Map[(int)homeBuilding.hexTransform.RowColumn.x, (int)homeBuilding.hexTransform.RowColumn.y]);
     }
 
-    void DestinationCheck()
-    {
-        columnCorrect.A = hexTransform.RowColumn.x;
-        rowCorrect.A = hexTransform.RowColumn.y;
-
-        if(unitStateMachine.CurrentState == moveToBuildingSite)
-        {
-            columnCorrect.B = assignedBuilding.hexTransform.RowColumn.y;
-            rowCorrect.B = assignedBuilding.hexTransform.RowColumn.y;
-        }
-        if(unitStateMachine.CurrentState == returnHome)
-        {
-            columnCorrect.B = homeBuilding.hexTransform.RowColumn.y;
-            rowCorrect.B = homeBuilding.hexTransform.RowColumn.y;
-        }
-    }
-
     void Build()
     {
 
     }
 
+    bool TestTiles()
+    {
+        return hexTransform == assignedBuilding.hexTransform;
+    }
+
     private void setupStateMachine()
     {
-        positionCorrect.A = columnCorrect;
-        positionCorrect.B = rowCorrect;
+        positionCorrect.Condition = TestTiles;
 
         Transition arriveAtSite = new Transition("Arrived At Site", positionCorrect, new List<Action>());
         Transition buildingComplete = new Transition("Building Complete", buildTimeComplete, new List<Action>());
@@ -69,7 +54,7 @@ public class Builder : BaseUnit
         moveToBuildingSite = new State("Moving To building Site",
             new List<Transition>() { arriveAtSite },
             null,
-            new List<Action>() { Move, DestinationCheck },
+            new List<Action>() { Move },
             null);
 
         State build = new State("Constructing",
