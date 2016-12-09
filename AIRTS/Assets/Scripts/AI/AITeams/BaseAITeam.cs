@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Script by: Tristan Bampton UP690813
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -138,7 +140,7 @@ public class BaseAITeam : MonoBehaviour
                     Vector3 BuildingPos = MapGenerator.Map[(int)Location.x, (int)Location.y].transform.position;
                     BuildingsList.Add((BaseBuilding)Instantiate(GlobalAttributes.Global.Buildings[(int)building], BuildingPos, Quaternion.identity, transform));
 
-                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location);
+                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location, TeamID);
 
                     // Deduct resources.
                     DeductResources(buildingTier);

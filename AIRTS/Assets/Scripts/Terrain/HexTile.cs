@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Script by: Tristan Bampton UP690813
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -74,62 +76,6 @@ public class HexTransform
         }
         return false;
     }
-    
-    /// <summary>
-    /// Compares two HexTransforms by their positions.
-    /// </summary>
-    /// <param name="ht1"></param>
-    /// <param name="ht2"></param>
-    /// <returns></returns>
-    public static bool operator ==(HexTransform ht1, HexTransform ht2)
-    {
-        return (ht1.Position == ht2.Position);
-    }
-
-    /// <summary>
-    /// Compares two HexTransforms by their positions.
-    /// </summary>
-    /// <param name="ht1"></param>
-    /// <param name="ht2"></param>
-    /// <returns></returns>
-    public static bool operator !=(HexTransform ht1, HexTransform ht2)
-    {
-        return (ht1.Position != ht2.Position);
-    }
-
-    /// <summary>
-    /// Adds the positions of the two HexTransforms
-    /// </summary>
-    /// <param name="ht1"></param>
-    /// <param name="ht2"></param>
-    /// <returns></returns>
-    public static HexTransform operator +(HexTransform ht1, HexTransform ht2)
-    {
-        return new HexTransform(ht1.Position + ht2.Position);
-    }
-
-    /// <summary>
-    /// subtracts the positions of the two Hextransforms
-    /// </summary>
-    /// <param name="ht1"></param>
-    /// <param name="ht2"></param>
-    /// <returns></returns>
-    public static HexTransform operator -(HexTransform ht1, HexTransform ht2)
-    {
-        return new HexTransform(ht1.Position - ht2.Position);
-    }
-
-    /// <summary>
-    /// Calculates the Manhatton distance between two HexTransforms
-    /// </summary>
-    /// <param name="ht1"></param>
-    /// <param name="ht2"></param>
-    /// <returns></returns>
-    public static int operator |(HexTransform ht1, HexTransform ht2)
-    {
-        return (int)((Mathf.Abs(ht1.Position.x - ht2.Position.x) + Mathf.Abs(ht1.Position.y - ht2.Position.y) + Mathf.Abs(ht1.Position.z - ht2.Position.z)) / 2f);
-    }
-
 }
 
 public class HexTile : MonoBehaviour

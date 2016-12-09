@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Script by: Tristan Bampton UP690813
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
