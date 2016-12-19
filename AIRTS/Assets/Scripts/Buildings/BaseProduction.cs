@@ -63,9 +63,9 @@ public class BaseProduction : BaseBuilding
         cumulativeDeltaTime += Time.deltaTime;
     }
 
-    protected override void ConstructionFinished()
+    protected override void BeginOperational()
     {
-        base.ConstructionFinished();
+        base.BeginOperational();
         StartCoroutine(DesicionTreeRunIntervals());
     }
 
@@ -77,7 +77,7 @@ public class BaseProduction : BaseBuilding
         {
             ProductionCycle();
 
-            WaitInterval = (inProduction) ? 0 : 1;
+            WaitInterval = (inProduction) ? (ProductionTime - ProductionTimer) + Time.deltaTime : 1;
 
             yield return new WaitForSeconds(WaitInterval);
         }
@@ -88,6 +88,10 @@ public class BaseProduction : BaseBuilding
         return inProduction;
     }
 
+    /// <summary>
+    /// Needs to be implemented still
+    /// </summary>
+    /// <returns></returns>
     protected StorageBuilding FindStorageBuilding()
     {
         return null;

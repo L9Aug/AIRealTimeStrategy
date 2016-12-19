@@ -6,12 +6,12 @@ using System;
 
 namespace Decisions
 {
-    public abstract class ADecision
+    public interface IDecision
     {
-        public abstract object Test();
+        object Test();
     }
 
-    public class ObjectDecision : ADecision
+    public class ObjectDecision : IDecision
     {
         public delegate object ObjectParameter();
 
@@ -24,7 +24,7 @@ namespace Decisions
             Decision = decision;
         }
 
-        public override object Test()
+        public object Test()
         {
             return Decision();
         }

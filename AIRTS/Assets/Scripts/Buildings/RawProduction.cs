@@ -37,6 +37,12 @@ public class RawProduction : BaseProduction
 
     #endregion
 
+    #region Private
+
+    bool hasCorrectTerrain = false;
+
+    #endregion
+
     #endregion
 
     #region Classes
@@ -69,6 +75,7 @@ public class RawProduction : BaseProduction
     protected override void Start()
     {
         base.Start();
+        TestTerrain();
         SetupDecisionTree();
     }
 
@@ -78,9 +85,50 @@ public class RawProduction : BaseProduction
         //here for testing purposes.
     }
 
+    protected override IEnumerator DesicionTreeRunIntervals()
+    {
+        float WaitInterval = 0;
+
+        while (ProductionTree != null && hasCorrectTerrain)
+        {
+            ProductionCycle();
+
+            WaitInterval = (inProduction) ? (ProductionTime - ProductionTimer) + Time.deltaTime : 1;
+
+            yield return new WaitForSeconds(WaitInterval);
+        }
+    }
+
     #endregion
 
     #region Private
+
+    /// <summary>
+    /// Test to see if the building has the required terrain for production.
+    /// </summary>
+    private void TestTerrain()
+    {
+        // If we want production speed based on percentage of valid tiles that would be done here.
+
+        // Cycle through all the tiles that make up this building and check to see
+        // if any of them are the required terrain type for this mode of production.
+        foreach(HexTile hex in BuildingArea)
+        {
+            foreach(TerrainTypes terra in TerrainRequirement[ProductionMode].TerrainRequirment)
+            {
+                if(hex.TerrainType == terra)
+                {
+                    hasCorrectTerrain = true;
+                }
+            }
+        }
+
+        if (!hasCorrectTerrain)
+        {
+            // if the building doesn't have the correct terrain send a warning, with identification for the building.
+            Debug.LogWarning("Missing Terrain Requirement: " + BuildingType.ToString() + ", Team: " + TeamID);
+        }
+    }
 
     /// <summary>
     /// returns true if output storage is full
@@ -107,10 +155,15 @@ public class RawProduction : BaseProduction
         if(ProductionTimer >= ProductionTime)
         {
             OutputStorage.Add(new StorageItem(OutputProduct[ProductionMode]));
-            ProductionTimer = 0;
+            ProductionTimer -= ProductionTime;
             inProduction = false;
         }
 
+    }
+
+    private object GetHaveValidTerrain()
+    {
+        return hasCorrectTerrain;
     }
 
     void SetupDecisionTree()
@@ -124,6 +177,8 @@ public class RawProduction : BaseProduction
 
         ObjectDecision DoIHaveCourierCond = new ObjectDecision(IsThereAnAvailableCourier);
 
+        ObjectDecision haveCorrectTerrainDec = new ObjectDecision(GetHaveValidTerrain);
+
         // Create leaves
         Leaf WaitLeaf = new Leaf();
 
@@ -133,14 +188,19 @@ public class RawProduction : BaseProduction
 
         Leaf DoProductionLeaf = new Leaf(DoProduction);
 
+        Leaf HaltProduction = new Leaf();
+
         // Create Verticies
         Vertex HaveCourier = new Vertex(DoIHaveCourierCond, SendCourierLeaf, WaitLeaf);
 
         Vertex IsThereStorage = new Vertex(IsThereStorageBuildingCond, HaveCourier, WaitLeaf);
 
-        Vertex IsOutputStorageFull = new Vertex(IsOutputStorageFullCond, IsThereStorage, BeginProductionLeaf);
+        Vertex DoWeHaveCorrectTerrain = new Vertex(haveCorrectTerrainDec, BeginProductionLeaf, HaltProduction);
+
+        Vertex IsOutputStorageFull = new Vertex(IsOutputStorageFullCond, IsThereStorage, DoWeHaveCorrectTerrain);
 
         Vertex InProductionVert = new Vertex(InProductionCond, DoProductionLeaf, IsOutputStorageFull);
+
 
         // Create Tree
         ProductionTree = new DecisionTree(InProductionVert);

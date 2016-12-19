@@ -207,7 +207,13 @@ public class BaseBuilding : GameEntity
 
     protected virtual void ConstructionFinished()
     {
+        // Here change the update the model to the actual building model rather than the construction model.
+        OperationalModelData.SetActive(true);
+    }
 
+    protected virtual void BeginOperational()
+    {
+        
     }
 
     #endregion
@@ -218,6 +224,7 @@ public class BaseBuilding : GameEntity
     {
         // Create appropriate 3D model for being under construction.
 
+
         // Hide the operational model data.
         OperationalModelData.SetActive(false);
 
@@ -227,18 +234,6 @@ public class BaseBuilding : GameEntity
     private void ConstructionUpdate()
     {
         ConstructionTimer -= Time.deltaTime;
-    }
-
-    private void BeginOperational()
-    {
-        // Here change the update the model to the actual building model rather than the construction model.
-        OperationalModelData.SetActive(true);
-
-    }
-
-    private void OperationalUpdate()
-    {
-        BuildingUpdate();
     }
 
     private bool HasConstructionFinished()
@@ -257,11 +252,11 @@ public class BaseBuilding : GameEntity
         ConstructionCondition.Condition = HasConstructionFinished;
 
         // Create Transitions.
-        SM.Transition ConstructionFinishedtrans = new SM.Transition("Construction Finished", ConstructionCondition, ConstructionFinished);
+        SM.Transition ConstructionFinishedTrans = new SM.Transition("Construction Finished", ConstructionCondition, ConstructionFinished);
 
         // Create States.
         SM.State UnderConstruction = new SM.State("Under Construction", 
-            new List<SM.Transition>() { ConstructionFinishedtrans }, 
+            new List<SM.Transition>() { ConstructionFinishedTrans }, 
             new List<SM.Action>() { BeginConstruction },
             new List<SM.Action>() { ConstructionUpdate },
             null);
@@ -269,11 +264,11 @@ public class BaseBuilding : GameEntity
         SM.State Operational = new SM.State("Operational",
             null,
             new List<SM.Action>() { BeginOperational },
-            new List<SM.Action>() { OperationalUpdate },
+            new List<SM.Action>() { BuildingUpdate },
             null);
 
         // Add target state to transitions
-        ConstructionFinishedtrans.SetTargetState(Operational);
+        ConstructionFinishedTrans.SetTargetState(Operational);
 
         BuildingStateMachine = new SM.StateMachine(null, UnderConstruction, Operational);    
 
