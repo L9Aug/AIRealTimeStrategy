@@ -63,9 +63,19 @@ public class RawProduction : BaseProduction
 
     #region Public
 
-    public override void ProductionCycle()
+    public override void TreeTick()
     {
-        base.ProductionCycle();
+        base.TreeTick();
+    }
+
+    public override List<KalamataTicket> GetTicketForProducts(ref List<Products> products)
+    {
+        return GetTicketsForProducts(OutputStorage, ref products);
+    }
+
+    public override bool TestForProducts(params Products[] products)
+    {
+        return TestForProducts(OutputStorage, products);
     }
 
     #endregion
@@ -85,17 +95,32 @@ public class RawProduction : BaseProduction
         //here for testing purposes.
     }
 
-    protected override IEnumerator DesicionTreeRunIntervals()
+    protected override IEnumerator DecisionTreeRunIntervals()
     {
         float WaitInterval = 0;
 
         while (ProductionTree != null && hasCorrectTerrain)
         {
-            ProductionCycle();
-
+            TreeTick();
             WaitInterval = (inProduction) ? (ProductionTime - ProductionTimer) + Time.deltaTime : 1;
 
             yield return new WaitForSeconds(WaitInterval);
+        }
+    }
+
+    protected override IEnumerator ProductionCycle()
+    {
+        while (inProduction)
+        {
+            yield return null;
+            ProductionTimer += Time.deltaTime;
+
+            if (ProductionTimer >= ProductionTime)
+            {
+                OutputStorage.Add(new StorageItem(OutputProduct[ProductionMode]));
+                ProductionTimer = 0;
+                inProduction = false;
+            }
         }
     }
 
@@ -139,28 +164,6 @@ public class RawProduction : BaseProduction
         return (OutputStorage.Count >= 5) ? true : false;
     }
 
-    void BeginProduction()
-    {
-        inProduction = true;
-    }
-
-    /// <summary>
-    /// Advances the current production.
-    /// </summary>
-    void DoProduction()
-    {
-        ProductionTimer += cumulativeDeltaTime;
-        cumulativeDeltaTime = 0;
-
-        if(ProductionTimer >= ProductionTime)
-        {
-            OutputStorage.Add(new StorageItem(OutputProduct[ProductionMode]));
-            ProductionTimer -= ProductionTime;
-            inProduction = false;
-        }
-
-    }
-
     private object GetHaveValidTerrain()
     {
         return hasCorrectTerrain;
@@ -186,8 +189,6 @@ public class RawProduction : BaseProduction
 
         Leaf SendCourierLeaf = new Leaf();
 
-        Leaf DoProductionLeaf = new Leaf(DoProduction);
-
         Leaf HaltProduction = new Leaf();
 
         // Create Verticies
@@ -199,8 +200,7 @@ public class RawProduction : BaseProduction
 
         Vertex IsOutputStorageFull = new Vertex(IsOutputStorageFullCond, IsThereStorage, DoWeHaveCorrectTerrain);
 
-        Vertex InProductionVert = new Vertex(InProductionCond, DoProductionLeaf, IsOutputStorageFull);
-
+        Vertex InProductionVert = new Vertex(InProductionCond, WaitLeaf, IsOutputStorageFull);
 
         // Create Tree
         ProductionTree = new DecisionTree(InProductionVert);

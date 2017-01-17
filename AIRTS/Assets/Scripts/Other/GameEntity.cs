@@ -81,7 +81,7 @@ public class GameEntityEditor : Editor
         if (UseCustomInpector)
         {
             EditorGUILayout.LabelField("Team ID:", myGETarget.TeamID.ToString());
-            EditorGUILayout.LabelField("Health:", myGETarget.Health.ToString() + "/" + myGETarget.MaxHealth.ToString());
+            EditorGUILayout.LabelField("Health:", myGETarget.Health.ToString() + " / " + myGETarget.MaxHealth.ToString());
         }
         else
         {

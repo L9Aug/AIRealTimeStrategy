@@ -48,6 +48,16 @@ public class StorageBuilding : BaseBuilding
         return returnList;
     }
 
+    public override List<KalamataTicket> GetTicketForProducts(ref List<Products> products)
+    {
+        return GetTicketsForProducts(ItemsStored, ref products);
+    }
+
+    public override bool TestForProducts(params Products[] products)
+    {
+        return TestForProducts(ItemsStored, products);
+    }
+
     #endregion
 
     #region Protected

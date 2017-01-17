@@ -29,6 +29,8 @@ public class TeamManager : MonoBehaviour
 
     public List<BaseAITeam> Teams = new List<BaseAITeam>(1);
 
+    public static TeamManager TM;
+
     #endregion
 
     #endregion
@@ -161,6 +163,11 @@ public class TeamManager : MonoBehaviour
 
         return testID;
 
+    }
+
+    public void Start()
+    {
+        TM = this;
     }
 
     #endregion

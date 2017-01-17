@@ -17,15 +17,17 @@ public class BaseProduction : BaseBuilding
 
     public float ProductionTime;
 
+    public int CourierCount = 0;
+
+    public List<GameEntity> OnMapCouriers = new List<GameEntity>();
+
+    public float ProductionTimer = 0;
+
+    public bool inProduction = false;
+
     #endregion
 
     #region Protected
-
-    protected bool inProduction = false;
-
-    protected float ProductionTimer = 0;
-
-    protected float cumulativeDeltaTime = 0;
 
     #endregion
 
@@ -35,7 +37,7 @@ public class BaseProduction : BaseBuilding
 
     #region Public  
 
-    public virtual void ProductionCycle()
+    public virtual void TreeTick()
     {
         if(ProductionTree != null)
         {
@@ -60,26 +62,21 @@ public class BaseProduction : BaseBuilding
     protected override void Update()
     {
         base.Update();
-        cumulativeDeltaTime += Time.deltaTime;
     }
 
     protected override void BeginOperational()
     {
         base.BeginOperational();
-        StartCoroutine(DesicionTreeRunIntervals());
+        StartCoroutine(DecisionTreeRunIntervals());
     }
 
-    protected virtual IEnumerator DesicionTreeRunIntervals()
+    protected virtual IEnumerator DecisionTreeRunIntervals()
     {
-        float WaitInterval = 0;
-
         while(ProductionTree != null)
         {
-            ProductionCycle();
+            TreeTick();
 
-            WaitInterval = (inProduction) ? (ProductionTime - ProductionTimer) + Time.deltaTime : 1;
-
-            yield return new WaitForSeconds(WaitInterval);
+            yield return null;
         }
     }
 
@@ -108,7 +105,18 @@ public class BaseProduction : BaseBuilding
     /// <returns></returns>
     protected object IsThereAnAvailableCourier()
     {
-        return false;
+        return (CourierCount > 0) ? true : false;
+    }
+
+    protected virtual void BeginProduction()
+    {
+        inProduction = true;
+        StartCoroutine(ProductionCycle());
+    }
+
+    protected virtual IEnumerator ProductionCycle()
+    {
+        yield return null;
     }
 
     #endregion
@@ -142,7 +150,7 @@ public class BaseProductionEditor : BaseBuildingEditor
 
         if (UseCustomInpector)
         {
-            EditorGUILayout.LabelField("Production Time:", myBPTarget.ProductionTime.ToString());
+            EditorGUILayout.LabelField("Production Time:", myBPTarget.ProductionTimer.ToString("F2") + " / " + myBPTarget.ProductionTime.ToString());
         }
     }
 

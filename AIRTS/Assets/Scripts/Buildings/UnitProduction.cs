@@ -3,6 +3,8 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using DT;
+using Decisions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -25,7 +27,7 @@ public class UnitProduction : BaseProduction
     /// Storage for products that are using in production
     /// </summary>
     [HideInInspector]
-    public List<Products> ProductionStorage = new List<Products>();
+    public List<List<int>> ProductionStorage = new List<List<int>>();
 
     /// <summary>
     /// The unit/s that this building creates.
@@ -64,11 +66,140 @@ public class UnitProduction : BaseProduction
     protected override void Start()
     {
         base.Start();
+
+        for(int i = 0; i < ProductionRequirements.Count; ++i)
+        {
+            ProductionStorage.Add(new List<int>());
+            for(int j = 0; j < ProductionRequirements[i].RequiredProducts.Count; ++j)
+            {
+                ProductionStorage[i].Add(1);
+            }
+        }
+
+        SetupDecisionTree();
     }
 
     protected override void Update()
     {
         base.Update();
+    }
+
+    protected override IEnumerator ProductionCycle()
+    {
+        while (inProduction)
+        {
+            yield return null;
+            ProductionTimer += Time.deltaTime;
+
+            if (ProductionTimer >= ProductionTime)
+            {
+                for (int i = 0; i < UnitOutput[ProductionMode].Units.Count; ++i)
+                {
+                    print("New " + UnitOutput[ProductionMode].Units[i].ToString() + " for Team " + TeamID);
+                }
+                ProductionTimer = 0;
+                inProduction = false;
+            }
+        }
+    }
+
+    protected override IEnumerator DecisionTreeRunIntervals()
+    {
+        while (ProductionTree != null)
+        {
+            TreeTick();
+            yield return null;
+        }
+    }
+
+    protected override void BeginProduction()
+    {
+        base.BeginProduction();
+        for(int i = 0; i < ProductionRequirements[ProductionMode].RequiredProducts.Count; ++i)
+        {
+            --ProductionStorage[ProductionMode][i];
+        }
+    }
+
+    #endregion
+
+    #region Private
+
+    private object ProductCheck()
+    {
+        bool haveProducts = true;
+
+        for(int i = 0; i < ProductionRequirements[ProductionMode].RequiredProducts.Count; ++i)
+        {
+            if(ProductionStorage[ProductionMode][i] == 0)
+            {
+                haveProducts = false;
+                break;
+            }
+        }
+
+        return haveProducts;
+    }
+
+    private object FutureProductCheck()
+    {
+        bool haveProducts = true;
+
+        for (int i = 0; i < ProductionRequirements[ProductionMode].RequiredProducts.Count; ++i)
+        {
+            if(ProductionStorage[ProductionMode][i] < 5)
+            {
+                haveProducts = false;
+                break;
+            }
+        }
+
+        return haveProducts;
+    }
+
+    private object AreProductsOnMap()
+    {
+        return TeamManager.TM.Teams[TeamID].FindProducts(ProductionRequirements[ProductionMode].RequiredProducts.ToArray());
+    }
+
+    private object HaveISentACourier()
+    {
+        return false;
+    }
+
+    private void SetupDecisionTree()
+    {
+        // create decisions
+        ObjectDecision isInProduction = new ObjectDecision(InProduction);
+
+        ObjectDecision doIHaveProductsForProduction = new ObjectDecision(ProductCheck);
+
+        ObjectDecision doIHaveProductsForFuture = new ObjectDecision(FutureProductCheck);
+
+        ObjectDecision canIGetProductsForProduction = new ObjectDecision(AreProductsOnMap);
+
+        ObjectDecision haveISentACouierForProducts = new ObjectDecision(HaveISentACourier);
+
+        // create leaves
+        Leaf WaitForNextCycle = new Leaf();
+
+        Leaf SendCourierForProducts = new Leaf();
+
+        Leaf BeginProductionLeaf = new Leaf(BeginProduction);
+
+        // create verticies
+        Vertex HaveISentCourier = new Vertex(haveISentACouierForProducts, WaitForNextCycle, SendCourierForProducts);
+
+        Vertex CanIGetProductsForProduction = new Vertex(canIGetProductsForProduction, HaveISentCourier, WaitForNextCycle);
+
+        Vertex DoIHaveProductsForThisProduction = new Vertex(doIHaveProductsForProduction, BeginProductionLeaf, CanIGetProductsForProduction);
+
+        Vertex DoIHaveProductsForFutureProductions = new Vertex(doIHaveProductsForFuture, WaitForNextCycle, CanIGetProductsForProduction);
+
+        Vertex IsInProduction = new Vertex(isInProduction, DoIHaveProductsForFutureProductions, DoIHaveProductsForThisProduction);
+
+        // create decition tree
+        ProductionTree = new DecisionTree(IsInProduction);
     }
 
     #endregion
@@ -103,7 +234,7 @@ public class UnitProductionEditor : BaseProductionEditor
         {
             UnitInspector();
 
-            StorageInspector("Input Storage: ", ref showInputStorage, myUPTarget.ProductionStorage, ref previousInputStorageCount, ref previousShowInputStorage, ref productCounts);
+            StorageInspector("Input Storage: ", ref showInputStorage, myUPTarget.ProductionStorage, myUPTarget.ProductionRequirements);
         }
     }
 

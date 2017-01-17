@@ -96,68 +96,7 @@ public class BaseBuilding : GameEntity
 
     #region Classes
 
-    #region Public
-
-    public class StorageItem
-    {
-        public Products Product;
-        private bool Reserved = false;
-        private float ReserveID = 0;
-
-        public StorageItem(Products product)
-        {
-            Product = product;
-        }
-
-        /// <summary>
-        /// Test to see if the product is what we are searching for
-        /// </summary>
-        /// <param name="Reserve">If the product is what we are searching for do we want to reserve it.</param>
-        /// <param name="SearchingFor">The products we are searching for.</param>
-        /// <returns>Returns the ReserveID unless this product is not what we are searching for or if it has already been reserved.</returns>
-        public float TestProduct(bool Reserve, params Products[] SearchingFor)
-        {
-            if (!Reserved)
-            {
-                foreach (Products p in SearchingFor)
-                {
-                    if (Product == p)
-                    {
-                        if (Reserve)
-                        {
-                            Reserved = true;
-                            ReserveID = GenerateID();
-                        }
-                        return ReserveID;
-                    }
-                }
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// Generates a unique ID using the time from the start of the game.
-        /// </summary>
-        /// <returns></returns>
-        private float GenerateID()
-        {
-            return Time.realtimeSinceStartup;
-        }
-
-        /// <summary>
-        /// Un-Reserves the product if it has this ID.
-        /// </summary>
-        /// <param name="ID"></param>
-        public void UnreserveProduct(float ID)
-        {
-            if(ReserveID == ID)
-            {
-                Reserved = false;
-                ReserveID = 0;
-            }
-        }
-    
-    }
+    #region Public    
 
     #endregion
 
@@ -186,6 +125,16 @@ public class BaseBuilding : GameEntity
 
     public virtual void BuildingUpdate() { }
 
+    public virtual List<KalamataTicket> GetTicketForProducts(ref List<Products> products)
+    {
+        return new List<KalamataTicket>();
+    }
+
+    public virtual bool TestForProducts(params Products[] products)
+    {
+        return false;
+    }
+
     #endregion
 
     #region Protected
@@ -207,6 +156,9 @@ public class BaseBuilding : GameEntity
 
     protected virtual void ConstructionFinished()
     {
+        //Destroy the Construction model
+        Destroy(ConstructionObject);
+
         // Here change the update the model to the actual building model rather than the construction model.
         OperationalModelData.SetActive(true);
     }
@@ -214,6 +166,53 @@ public class BaseBuilding : GameEntity
     protected virtual void BeginOperational()
     {
         
+    }   
+
+    protected List<KalamataTicket> GetTicketsForProducts(List<StorageItem> storage, ref List<Products> products)
+    {
+        List<KalamataTicket> tickets = new List<KalamataTicket>();
+
+        // only loop the usually larger list once.
+        foreach (StorageItem item in storage)
+        {
+            // if the item isn't reserved then continue tests on it.
+            if (!item.Reserved)
+            {
+                // this usuially being the smaller list gets looped more often.
+                foreach (Products product in products)
+                {
+                    // if the product is the one we want, create a ticket for it and remove it from the critea.
+                    if (product == item.Product)
+                    {
+                        KalamataTicket nTicket = new KalamataTicket(product, this, item.ReserveProduct());
+                        tickets.Add(nTicket);
+                        products.Remove(product);
+                        break;
+                    }
+                }
+            }
+            if (products.Count == 0) break;
+        }
+
+        return tickets;
+    }
+
+    protected bool TestForProducts(List<StorageItem> storage, params Products[] products)
+    {
+        foreach (StorageItem item in storage)
+        {
+            if (!item.Reserved)
+            {
+                foreach (Products product in products)
+                {
+                    if (item.Product == product)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     #endregion
@@ -223,7 +222,8 @@ public class BaseBuilding : GameEntity
     private void BeginConstruction()
     {
         // Create appropriate 3D model for being under construction.
-
+        ConstructionObject = (GameObject)Instantiate(Resources.Load("ConstructionBuildings/ConstructionBuilding0" + Size));
+        ConstructionObject.transform.SetParent(transform, false);
 
         // Hide the operational model data.
         OperationalModelData.SetActive(false);
@@ -259,7 +259,7 @@ public class BaseBuilding : GameEntity
             new List<SM.Transition>() { ConstructionFinishedTrans }, 
             new List<SM.Action>() { BeginConstruction },
             new List<SM.Action>() { ConstructionUpdate },
-            null);
+            new List<SM.Action>() {  });
 
         SM.State Operational = new SM.State("Operational",
             null,
@@ -287,6 +287,8 @@ public class BaseBuilding : GameEntity
     #endregion
 
 }
+
+
 
 #if UNITY_EDITOR
 [CustomEditor(typeof(BaseBuilding))]
@@ -332,19 +334,19 @@ public class BaseBuildingEditor : GameEntityEditor
 
             EditorGUILayout.LabelField("Building Size:", myBBTarget.Size.ToString());
 
-            EditorGUILayout.LabelField("Construction Time:", myBBTarget.ConstructionTimer.ToString("F2") + "/" + myBBTarget.ConstructionTime.ToString());
+            EditorGUILayout.LabelField("Construction Time:", myBBTarget.ConstructionTimer.ToString("F2") + " / " + myBBTarget.ConstructionTime.ToString());
             
             EditorGUILayout.LabelField("Production Mode:", myBBTarget.ProductionMode.ToString());
         }
     }
 
-    protected List<ProductNumbers> CalcProductCounts(List<BaseBuilding.StorageItem> list)
+    protected List<ProductNumbers> CalcProductCounts(List<StorageItem> list)
     {
         List<ProductNumbers> ReturnList = new List<ProductNumbers>();
 
         // for each storage item check if it is already in our return list
         // if it is then increase it corrosponding count, if it is not then add it to the list.
-        foreach (BaseBuilding.StorageItem SI in list)
+        foreach (StorageItem SI in list)
         {
             if (DoesProdCountsContain(SI.Product, ReturnList))
             {
@@ -393,6 +395,22 @@ public class BaseBuildingEditor : GameEntityEditor
         return false;
     }
 
+    protected void StorageInspector(string name, ref bool ShowStorage, List<List<int>> ItemList, List<UnitProduction.InputRequirements> ExpectedList)
+    {
+        ShowStorage = EditorGUILayout.Foldout(ShowStorage, name);
+
+        if (ShowStorage)
+        {
+            for(int i = 0; i < ExpectedList.Count; ++i)
+            {
+                for(int j = 0; j < ExpectedList[i].RequiredProducts.Count; ++j)
+                {
+                    EditorGUILayout.LabelField(ItemList[i][j].ToString() + 'x', ExpectedList[i].RequiredProducts[j].ToString());
+                }
+            }
+        }
+    }
+
     protected void StorageInspector(string name, ref bool ShowStorage, List<Products> ItemList, ref int previousCount, ref bool previousShowStorage, ref List<ProductNumbers> list)
     {
         ShowStorage = EditorGUILayout.Foldout(ShowStorage, name + ItemList.Count.ToString());
@@ -419,7 +437,20 @@ public class BaseBuildingEditor : GameEntityEditor
         previousShowStorage = ShowStorage;
     }
 
-    protected void StorageInspector(string name, ref bool ShowStorage, List<BaseBuilding.StorageItem> ItemList, ref int previousCount, ref bool previousShowStorage)
+    protected void StorageInspector(string name, ref bool ShowStorage, List<int> ItemList, List<Products> ExpectedList)
+    {
+        ShowStorage = EditorGUILayout.Foldout(ShowStorage, name);
+
+        if(ItemList.Count > 0 && ShowStorage)
+        {
+            for(int  i =0; i < ExpectedList.Count; ++i)
+            {
+                EditorGUILayout.LabelField(ItemList[i].ToString() + 'x', ExpectedList[i].ToString());
+            }
+        }
+    }
+
+    protected void StorageInspector(string name, ref bool ShowStorage, List<StorageItem> ItemList, ref int previousCount, ref bool previousShowStorage)
     {
         ShowStorage = EditorGUILayout.Foldout(ShowStorage, name + ItemList.Count.ToString());
 

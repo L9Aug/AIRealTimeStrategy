@@ -76,30 +76,13 @@ public class BaseAITeam : MonoBehaviour
             }
         }
 
-    }
-
-    /// <summary>
-    /// Like an Argos ticket but better.
-    /// </summary>
-    public class KalamataTicket
-    {
-        public Products Product;
-        public BaseBuilding ProductOwner;
-        public HexTransform ProductPosition;
-        public float ReservationID;
-
-        public KalamataTicket(Products product, BaseBuilding productOwner, float reservationID)
-        {
-            Product = product;
-            ProductOwner = productOwner;
-            ProductPosition = ProductOwner.hexTransform;
-            ReservationID = reservationID;
-        }
-    }
+    }   
 
     #endregion
 
-    #region Public Functions
+    #region Functions
+
+    #region Public
 
     /// <summary>
     /// 
@@ -107,14 +90,30 @@ public class BaseAITeam : MonoBehaviour
     /// <param name="MyPos"></param>
     /// <param name="products"></param>
     /// <returns>A list of products and their locations, empty if no products were found.</returns>
-    public List<KalamataTicket> FindProuct(HexTransform MyPos, params Products[] products)
+    public List<KalamataTicket> ReserveProducts(HexTransform MyPos, params Products[] products)
     {
         List<KalamataTicket> productTickets = new List<KalamataTicket>();
 
+        List<Products> remainingProducts = new List<Products>();
+        remainingProducts.AddRange(products);
 
-        // do stuff like search buildings or whatever.
+        // search buildings.
+        foreach(BaseBuilding building in BuildingsList)
+        {
+            productTickets.AddRange(building.GetTicketForProducts(ref remainingProducts));
+            if (remainingProducts.Count == 0) break;
+        }
 
         return productTickets;
+    }
+
+    public bool FindProducts(params Products[] products)
+    {
+        foreach(BaseBuilding building in BuildingsList)
+        {
+            if(building.TestForProducts(products)) return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -151,7 +150,6 @@ public class BaseAITeam : MonoBehaviour
                     // Clear Connections.
                     ClearArea(BuildingsList[BuildingsList.Count - 1]);
 
-
                     return true;
                 }
                 else
@@ -174,7 +172,7 @@ public class BaseAITeam : MonoBehaviour
 
     #endregion
 
-    #region Private Functions
+    #region Private
 
     /// <summary>
     /// Sets an exclusion zone around the building.
@@ -276,9 +274,9 @@ public class BaseAITeam : MonoBehaviour
         return false;
     }
 
-
     #endregion
 
+    #endregion
 }
 
 

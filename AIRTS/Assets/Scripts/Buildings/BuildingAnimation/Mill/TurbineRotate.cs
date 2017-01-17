@@ -18,15 +18,21 @@ public class TurbineRotate : MonoBehaviour {
 
     private float RotationValue = 0;
 
+    private BaseProduction parent;
+
     void Start()
     {
         if (Dir == 0) Dir = 1;
+        parent = GetComponentInParent<BaseProduction>();
     }
 
     void FixedUpdate()
     {
-        RotationValue = Mathf.Lerp(RotationValue, RotationValue - (RotationSpeed * Dir), Time.fixedDeltaTime);
-        transform.rotation = Quaternion.AngleAxis(RotationValue, Axis);
-        if (Mathf.Abs(RotationValue) > 360) RotationValue %= 360;
+        if (parent.inProduction)
+        {
+            RotationValue = Mathf.Lerp(RotationValue, RotationValue - (RotationSpeed * Dir), Time.fixedDeltaTime);
+            transform.rotation = Quaternion.AngleAxis(RotationValue, Axis);
+            if (Mathf.Abs(RotationValue) > 360) RotationValue %= 360;
+        }
     }
 }
