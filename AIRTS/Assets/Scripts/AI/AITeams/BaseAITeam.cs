@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Script by: Tristan Bampton UP690813
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -16,6 +18,12 @@ public class BaseAITeam : MonoBehaviour
     /// </summary>
     [Tooltip("The ID for this team")]
     public int TeamID = 0;
+
+    /// <summary>
+    /// The starting location for this team.
+    /// </summary>
+    [Tooltip("The starting location for this team.")]
+    public Vector2 StartingLocation;
 
     /// <summary>
     /// The amount of gold this team has.
@@ -43,6 +51,7 @@ public class BaseAITeam : MonoBehaviour
     #endregion
 
     #region Classes
+
     [System.Serializable]
     public class PopulationClass
     {
@@ -67,18 +76,43 @@ public class BaseAITeam : MonoBehaviour
             }
         }
 
-    }
+    }   
 
     #endregion
 
-    #region Public Functions
+    #region Functions
 
-    public bool FindProuct(HexTransform MyPos, out HexTransform ClosestBuilding, params Products[] products)
+    #region Public
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="MyPos"></param>
+    /// <param name="products"></param>
+    /// <returns>A list of products and their locations, empty if no products were found.</returns>
+    public List<KalamataTicket> ReserveProducts(HexTransform MyPos, params Products[] products)
     {
-        ClosestBuilding = MyPos;
+        List<KalamataTicket> productTickets = new List<KalamataTicket>();
 
-        // do stuff like search buildings or whatever.
+        List<Products> remainingProducts = new List<Products>();
+        remainingProducts.AddRange(products);
 
+        // search buildings.
+        foreach(BaseBuilding building in BuildingsList)
+        {
+            productTickets.AddRange(building.GetTicketForProducts(ref remainingProducts));
+            if (remainingProducts.Count == 0) break;
+        }
+
+        return productTickets;
+    }
+
+    public bool FindProducts(params Products[] products)
+    {
+        foreach(BaseBuilding building in BuildingsList)
+        {
+            if(building.TestForProducts(products)) return true;
+        }
         return false;
     }
 
@@ -105,7 +139,7 @@ public class BaseAITeam : MonoBehaviour
                     Vector3 BuildingPos = MapGenerator.Map[(int)Location.x, (int)Location.y].transform.position;
                     BuildingsList.Add((BaseBuilding)Instantiate(GlobalAttributes.Global.Buildings[(int)building], BuildingPos, Quaternion.identity, transform));
 
-                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location);
+                    BuildingsList[BuildingsList.Count - 1].ConfigureBuilding(Location, TeamID);
 
                     // Deduct resources.
                     DeductResources(buildingTier);
@@ -115,7 +149,6 @@ public class BaseAITeam : MonoBehaviour
 
                     // Clear Connections.
                     ClearArea(BuildingsList[BuildingsList.Count - 1]);
-
 
                     return true;
                 }
@@ -139,7 +172,7 @@ public class BaseAITeam : MonoBehaviour
 
     #endregion
 
-    #region Private Functions
+    #region Private
 
     /// <summary>
     /// Sets an exclusion zone around the building.
@@ -243,6 +276,7 @@ public class BaseAITeam : MonoBehaviour
 
     #endregion
 
+    #endregion
 }
 
 
@@ -250,16 +284,17 @@ public class BaseAITeam : MonoBehaviour
 [CustomEditor(typeof(BaseAITeam))]
 public class AITeamBaseEditor : Editor
 {
+
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
         BaseAITeam myTarget = (BaseAITeam)target;
+
+        base.OnInspectorGUI();
 
         if (GUILayout.Button("Create Building"))
         {
             myTarget.ConstructBuilding(myTarget.TestSpawn, new Vector2(myTarget.x, myTarget.y));
         }
-
     }
 
 }

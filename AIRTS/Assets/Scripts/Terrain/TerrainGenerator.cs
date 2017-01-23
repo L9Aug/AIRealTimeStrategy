@@ -26,6 +26,8 @@ public class TerrainGenerator : MonoBehaviour
         SpotGen(TerrainTypes.Forest,100, 2,3, TerrainTypes.Desert, TerrainTypes.Hills,TerrainTypes.Plains);
         SpotGen(TerrainTypes.Lake, 100, 3,5, TerrainTypes.Plains, TerrainTypes.Hills,TerrainTypes.Forest);
         Sea(10);
+
+
     }
 
     void Blank(TerrainTypes Terrain)

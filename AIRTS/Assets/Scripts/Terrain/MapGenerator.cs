@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Script by: Tristan Bampton UP690813
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -19,10 +21,13 @@ public class MapGenerator : MonoBehaviour {
 
     float FrameStartTime = 0;
 
+    TeamManager teamManager;
+
 	// Use this for initialization
 	void Start ()
     {
         StartCoroutine(GenerateMap());
+        teamManager = FindObjectOfType<TeamManager>();
     }
 	
 	// Update is called once per frame
@@ -85,8 +90,10 @@ public class MapGenerator : MonoBehaviour {
         }
 
         print("Made " + numCons + " connections in " + (Time.realtimeSinceStartup - connectionsStartTime) + " seconds. Total Generation Time " + (Time.realtimeSinceStartup - GenStartTime) + " seconds.");
-        FindObjectOfType<TerrainGenerator>().StartGen();
-        //FindObjectOfType<MapToJpeg>().jpeg();
+
+        GetComponent<TerrainGenerator>().StartGen();
+
+        teamManager.PlaceStartingBuildings();
     }
 
 }
