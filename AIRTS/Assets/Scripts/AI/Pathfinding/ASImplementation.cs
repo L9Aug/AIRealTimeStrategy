@@ -2,14 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ASImplementation : MonoBehaviour
-{
-    public static ASImplementation ASI;
 
-    public HexTile start;
-    public HexTile destination;
-    public List<HexTile> open = new List<HexTile>();
-    public List<HexTile> closed = new List<HexTile>();
+public class ASImplementation<T>
+{
+    public delegate float Heuristic(AStarInfo<T> from, AStarInfo<T> to);
+    public AStarInfo<T> start;
+    public AStarInfo<T> destination;
+    public List<AStarInfo<T>> open = new List<AStarInfo<T>>();
+    public List<AStarInfo<T>> closed = new List<AStarInfo<T>>();
 
     public enum ASStates { waitingForStart, waitingForEnd, processing, waitingForClear }
     public ASStates state = ASStates.waitingForStart;
@@ -17,7 +17,6 @@ public class ASImplementation : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        ASI = this;
     }
 
     // Update is called once per frame
@@ -25,21 +24,65 @@ public class ASImplementation : MonoBehaviour
 
     }
 
-    public List<HexTile> AStar(HexTile start, HexTile destination)
+    public List<AStarInfo<T>> AStar(AStarInfo<T> start, AStarInfo<T> destination, Heuristic heuristic)
     {
-        List<HexTile> temp = new List<HexTile>();
+        List<AStarInfo<T>> temp = new List<AStarInfo<T>>();
         bool destinationFound = false;
         bool noValidPath = false;
         open.Add(start);
 
-        AddConnectionsToOpen(start);
+        AddConnectionsToOpen(start, heuristic);
 
         while (!destinationFound && !noValidPath)
         {
-            HexTile T = GetLowestETC();
+            AStarInfo<T> current = GetLowestETC();
+            if (current != null && current != destination)
+            {
+                AddConnectionsToOpen(current, heuristic);
+            }
+            else if (current == destination)
+            {
+                destinationFound = true;
+            }
+            else
+            {
+                noValidPath = true;
+            }
+        }
+
+        if (destinationFound)
+        {
+            AStarInfo<T> tempDestination = destination;
+            while (tempDestination != start && tempDestination != null)
+            {
+                temp.Add(tempDestination);
+                //tempTile.SetColour(Color.magenta);
+                tempDestination = (AStarInfo<T>)tempDestination.root;
+            }
+
+            temp.Reverse();
+        }
+        state = ASStates.waitingForClear;
+
+        return temp;
+    }
+
+
+    public List<AStarInfo<T>> AStar(Heuristic heuristic)
+    {
+        List<AStarInfo<T>> temp = new List<AStarInfo<T>>();
+        bool destinationFound = false;
+        bool noValidPath = false;
+        open.Add(start);
+
+        AddConnectionsToOpen(start, heuristic);
+
+        while (!destinationFound && !noValidPath)
+        {
+            AStarInfo<T> T = GetLowestETC();
             if (T != null && T != destination)
             {
-                AddConnectionsToOpen(T);
+                AddConnectionsToOpen(T, heuristic);
             }
             else if (T == destination)
             {
@@ -53,12 +96,12 @@ public class ASImplementation : MonoBehaviour
 
         if (destinationFound)
         {
-            HexTile tempTile = destination;
+            AStarInfo<T> tempTile = destination;
             while (tempTile != start && tempTile != null)
             {
                 temp.Add(tempTile);
                 //tempTile.SetColour(Color.magenta);
-                tempTile = tempTile.ASI.root;
+                tempTile = (AStarInfo<T>)tempTile.root;
             }
 
             temp.Reverse();
@@ -68,63 +111,19 @@ public class ASImplementation : MonoBehaviour
         return temp;
     }
 
-
-    public List<HexTile> AStar()
-    {
-        List<HexTile> temp = new List<HexTile>();
-        bool destinationFound = false;
-        bool noValidPath = false;
-        open.Add(start);
-
-        AddConnectionsToOpen(start);
-
-        while (!destinationFound && !noValidPath)
-        {
-            HexTile T = GetLowestETC();
-            if (T != null && T != destination)
-            {
-                AddConnectionsToOpen(T);
-            }
-            else if (T == destination)
-            {
-                destinationFound = true;
-            }
-            else
-            {
-                noValidPath = true;
-            }
-        }
-
-        if (destinationFound)
-        {
-            HexTile tempTile = destination;
-            while (tempTile != start && tempTile != null)
-            {
-                temp.Add(tempTile);
-                //tempTile.SetColour(Color.magenta);
-                tempTile = tempTile.ASI.root;
-            }
-
-            temp.Reverse();
-        }
-        state = ASStates.waitingForClear;
-
-        return temp;
-    }
-
-    HexTile GetLowestETC()
+    AStarInfo<T> GetLowestETC()
     {
         if (open.Count > 0)
         {
-            HexTile tempTile = open[0];
-            float lowestCost = tempTile.ASI.ETC;
+            AStarInfo<T> tempTile = open[0];
+            float lowestCost = tempTile.ETC;
             if (open.Count > 1)
             {
                 for (int i = 1; i < open.Count; ++i)
                 {
-                    if (open[i].ASI.ETC < lowestCost)
+                    if (open[i].ETC < lowestCost)
                     {
-                        lowestCost = open[i].ASI.ETC;
+                        lowestCost = open[i].ETC;
                         tempTile = open[i];
                     }
                 }
@@ -134,11 +133,12 @@ public class ASImplementation : MonoBehaviour
         return null;
     }
 
-    void AddConnectionsToOpen(HexTile hex)
+    void AddConnectionsToOpen(AStarInfo<T> obj, Heuristic heuristic)
     {
-        if (hex != null)
+
+        if (obj != null)
         {
-            foreach (HexTile c in hex.Connections)
+            foreach (AStarInfo<T> c in obj.Connections)
             {
                 //If the tested tile has connections it is not impassable
                 if (c.Connections.Count > 0)
@@ -146,17 +146,17 @@ public class ASImplementation : MonoBehaviour
                     if (!open.Contains(c) && !closed.Contains(c))
                     {
                         open.Add(c);
-                        c.ASI.costSoFar = hex.ASI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f);
-                        c.ASI.heuristic = c.hexTransform.CalcHexManhattanDist(destination.hexTransform);
-                        c.ASI.ETC = c.ASI.costSoFar + c.ASI.heuristic;
-                        c.ASI.root = hex;
+                        c.costSoFar = obj.costSoFar + (c.cost / 2f) + (obj.cost / 2f);
+                        c.heuristic = heuristic(c, destination);
+                        c.ETC = c.costSoFar + c.heuristic;
+                        c.root = obj;
                     }
-                    else if (c.ASI.costSoFar > hex.ASI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f))
+                    else if (c.costSoFar > obj.costSoFar + (c.cost / 2f) + (obj.cost / 2f))
                     {
-                        c.ASI.costSoFar = hex.ASI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f);
-                        c.ASI.heuristic = c.hexTransform.CalcHexManhattanDist(destination.hexTransform);
-                        c.ASI.ETC = c.ASI.costSoFar + c.ASI.heuristic;
-                        c.ASI.root = hex;
+                        c.costSoFar = obj.costSoFar + (c.cost / 2f) + (obj.cost / 2f);
+                        c.heuristic = heuristic(c, destination);
+                        c.ETC = c.costSoFar + c.heuristic;
+                        c.root = obj;
                         if (closed.Contains(c))
                         {
                             closed.Remove(c);
@@ -165,41 +165,9 @@ public class ASImplementation : MonoBehaviour
                     }
                 }
             }
-            open.Remove(hex);
-            closed.Add(hex);
+            open.Remove(obj);
+            closed.Add(obj);
         }
     }
 
-    public void TileClicked(HexTile tile)
-    {
-        switch (state)
-        {
-            case ASStates.waitingForStart:
-                start = tile;
-                state = ASStates.waitingForEnd;
-                break;
-            case ASStates.waitingForEnd:
-                destination = tile;
-                state = ASStates.processing;
-                AStar();
-                break;
-            case ASStates.processing:
-                break;
-            case ASStates.waitingForClear:
-                foreach (HexTile t in open)
-                {
-                    //t.SetColour(Color.white);
-                }
-                open.Clear();
-                foreach (HexTile t in closed)
-                {
-                    //t.SetColour(Color.white);
-                }
-                closed.Clear();
-                state = ASStates.waitingForStart;
-                break;
-            default:
-                break;
-        }
-    }
 }

@@ -54,6 +54,12 @@ public class HexTransform
         return (int)((Mathf.Abs(TargetTile.Position.x - Position.x) + Mathf.Abs(TargetTile.Position.y - Position.y) + Mathf.Abs(TargetTile.Position.z - Position.z)) / 2f);
     }
 
+    public static float CalcHexManhattanDist(AStarInfo<HexTile> CurrentTile, AStarInfo<HexTile> TargetTile)
+    {
+        return Mathf.Floor((Mathf.Abs(TargetTile.current.hexTransform.Position.x - CurrentTile.current.hexTransform.Position.x) + Mathf.Abs(TargetTile.current.hexTransform.Position.y -
+            CurrentTile.current.hexTransform.Position.y) + Mathf.Abs(TargetTile.current.hexTransform.Position.z - CurrentTile.current.hexTransform.Position.z)) / 2f);
+    }
+
     public HexTransform CubetoOddQ(float X, float Y, float Z)
     {
         return new HexTransform(new Vector3(X, Y, Z));
@@ -87,32 +93,9 @@ public class HexTile : MonoBehaviour
     public HexTransform hexTransform;
     public TerrainTypes TerrainType;
     public bool IsExlusionZone = false;
-    public List<HexTile> Connections = new List<HexTile>();
-	public AStarInfo ASI;
+    
+	public AStarInfo<HexTile> ASI;
     public DijkstraInfo DI;
-    public float traverseSpeed;
-
-    #endregion
-
-    #endregion
-
-    #region Classes
-
-    #region Public
-
-    public class AStarInfo
-    {
-        public HexTile root;
-        public float ETC;
-        public float costSoFar;
-        public float heuristic;
-    }
-
-    public class DijkstraInfo
-    {
-        public HexTile root;
-        public float costSoFar;
-    }
 
     #endregion
 
@@ -131,37 +114,39 @@ public class HexTile : MonoBehaviour
     {
         hexTransform = new HexTransform(q, r);
         SetTexture(TerrainTypes.Plains);
+
+        ASI = new AStarInfo<HexTile>(this, 1);
     }
 
     public int GetConnections()
     {
-        Connections.Clear();
+        ASI.Connections.Clear();
         HexTransform testCon = new HexTransform(0, 0);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x + 1, hexTransform.Position.y, hexTransform.Position.z - 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x + 1, hexTransform.Position.y, hexTransform.Position.z);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x, hexTransform.Position.y, hexTransform.Position.z + 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x - 1, hexTransform.Position.y, hexTransform.Position.z + 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x - 1, hexTransform.Position.y, hexTransform.Position.z);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
         testCon = testCon.CubetoOddQ(hexTransform.Position.x, hexTransform.Position.y, hexTransform.Position.z - 1);
-        if (testCon.validateOddQ()) Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y]);
+        if (testCon.validateOddQ()) ASI.Connections.Add(MapGenerator.Map[(int)testCon.RowColumn.x, (int)testCon.RowColumn.y].ASI);
 
-        return Connections.Count;
+        return ASI.Connections.Count;
     }
 
     public void ClearConnections()
     {
-        Connections.Clear();
+        ASI.Connections.Clear();
     }
 
     public void UnclearConnections()
@@ -263,18 +248,18 @@ public class HexTile : MonoBehaviour
     /// <param name="list">A reference to a list that will contain the area.</param>
     private void GetHexArea(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ClosedList)
     {
-        if (Connections.Count != 0 && !IsExlusionZone) list.Add(this);
+        if (ASI.Connections.Count != 0 && !IsExlusionZone) list.Add(this);
 
-        foreach (HexTile c in Connections)
+        foreach (AStarInfo<HexTile> c in ASI.Connections)
         {
-            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
+            float dist = c.current.hexTransform.CalcHexManhattanDist(Center.hexTransform);
 
             if (dist < Radius)
             {
-                if (!ClosedList.Contains(c) && !list.Contains(c))
+                if (!ClosedList.Contains(c.current) && !list.Contains(c.current))
                 {
-                    ClosedList.Add(c);
-                    c.GetHexArea(Center, Radius, ref list, ref ClosedList);
+                    ClosedList.Add(c.current);
+                    c.current.GetHexArea(Center, Radius, ref list, ref ClosedList);
                 }
             }
         }
@@ -289,24 +274,24 @@ public class HexTile : MonoBehaviour
     /// <param name="ignoreList">A reference to a list that will store the tiles leading up to the ring.(stops it from checking the same tile more than once)</param>
     private void GetHexRing(HexTransform Center, int Radius, ref List<HexTile> list, ref List<HexTile> ignoreList)
     {
-        foreach (HexTile c in Connections)
+        foreach (AStarInfo<HexTile> c in ASI.Connections)
         {
-            float dist = c.hexTransform.CalcHexManhattanDist(Center);
+            float dist = c.current.hexTransform.CalcHexManhattanDist(Center);
 
             if (dist + 1 == Radius) // if the connection is on the ring add it to the list and search it's connections.
             {
-                if (!list.Contains(c))
+                if (!list.Contains(c.current))
                 {
-                    list.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                    list.Add(c.current);
+                    c.current.GetHexRing(Center, Radius, ref list, ref ignoreList);
                 }
             }
             else if (dist <= Radius) // if the connection is in the area of the ring add it to the ignore list and search it's connections.
             {
-                if (!ignoreList.Contains(c))
+                if (!ignoreList.Contains(c.current))
                 {
-                    ignoreList.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                    ignoreList.Add(c.current);
+                    c.current.GetHexRing(Center, Radius, ref list, ref ignoreList);
                 }
             }
         }
@@ -321,24 +306,24 @@ public class HexTile : MonoBehaviour
     /// <param name="ignoreList">A reference to a list that will store the tiles leading up to the ring.(stops it from checking the same tile more than once)</param>
     private void GetHexRing(HexTile Center, int Radius, ref List<HexTile> list, ref List<HexTile> ignoreList)
     {
-        foreach (HexTile c in Connections)
+        foreach (AStarInfo<HexTile> c in ASI.Connections)
         {
-            float dist = c.hexTransform.CalcHexManhattanDist(Center.hexTransform);
+            float dist = c.current.hexTransform.CalcHexManhattanDist(Center.hexTransform);
 
             if (dist + 1 == Radius) // if the connection is on the ring add it to the list and search it's connections.
             {
-                if (!list.Contains(c))
+                if (!list.Contains(c.current))
                 {
-                    list.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                    list.Add(c.current);
+                    c.current.GetHexRing(Center, Radius, ref list, ref ignoreList);
                 }
             }
             else if (dist <= Radius) // if the connection is in the area of the ring add it to the ignore list and search it's connections.
             {
-                if (!ignoreList.Contains(c))
+                if (!ignoreList.Contains(c.current))
                 {
-                    ignoreList.Add(c);
-                    c.GetHexRing(Center, Radius, ref list, ref ignoreList);
+                    ignoreList.Add(c.current);
+                    c.current.GetHexRing(Center, Radius, ref list, ref ignoreList);
                 }
             }
         }

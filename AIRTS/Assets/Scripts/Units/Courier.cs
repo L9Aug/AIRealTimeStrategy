@@ -43,7 +43,9 @@ public class Courier : BaseUnit
 
     void GetPathHome()
     {
-        path = ASImplementation.ASI.AStar(MapGenerator.Map[(int)hexTransform.RowColumn.x, (int)hexTransform.RowColumn.y], MapGenerator.Map[(int)homeBuilding.hexTransform.RowColumn.x, (int)homeBuilding.hexTransform.RowColumn.y]);
+        path = aStar.AStar(MapGenerator.Map[(int)hexTransform.RowColumn.x, (int)hexTransform.RowColumn.y].ASI, 
+            MapGenerator.Map[(int)homeBuilding.hexTransform.RowColumn.x, (int)homeBuilding.hexTransform.RowColumn.y].ASI, 
+            HexTransform.CalcHexManhattanDist);
     }
 
     void ReturnHome()

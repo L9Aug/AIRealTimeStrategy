@@ -4,10 +4,8 @@ using System.Collections.Generic;
 
 public class DijkstraImplementation : MonoBehaviour
 {
-    public static DijkstraImplementation DJI;
-
-    public List<HexTile> open = new List<HexTile>();
-    public List<HexTile> closed = new List<HexTile>();
+    public List<DijkstraInfo> open = new List<DijkstraInfo>();
+    public List<DijkstraInfo> closed = new List<DijkstraInfo>();
 
     public enum DJStates { waitingForStart, waitingForEnd, processing, waitingForClear}
     public DJStates state = DJStates.waitingForStart;
@@ -18,9 +16,9 @@ public class DijkstraImplementation : MonoBehaviour
     /// <param name="start">Tile to start from</param>
     /// <param name="destination">Tile to find the shortest path to</param>
     /// <returns>List of tiles that is the shortest path between these two tiles</returns>
-    public List<HexTile> Dijkstra(HexTile start, HexTile destination)
+    public List<DijkstraInfo> Dijkstra(DijkstraInfo start, DijkstraInfo destination)
     {
-        List<HexTile> temp = new List<HexTile>();
+        List<DijkstraInfo> temp = new List<DijkstraInfo>();
         bool destinationFound = false;
         bool noValidPath = false;
         open.Add(start);
@@ -29,7 +27,7 @@ public class DijkstraImplementation : MonoBehaviour
 
         while (!destinationFound && !noValidPath)
         {
-            HexTile tile = GetLowestCost();
+            DijkstraInfo tile = GetLowestCost();
             if(tile != null && tile != destination)
             {
                 AddConnectionsToOpen(tile);
@@ -45,12 +43,12 @@ public class DijkstraImplementation : MonoBehaviour
 
         if (destinationFound)
         {
-            HexTile tempTile = destination;
+            DijkstraInfo tempTile = destination;
             while(tempTile != start && tempTile != null)
             {
                 temp.Add(tempTile);
                 //tempTile.SetColour(Color.magenta);
-                tempTile = tempTile.DI.root;
+                tempTile = (DijkstraInfo)tempTile.root;
             }
 
             temp.Reverse();
@@ -67,22 +65,22 @@ public class DijkstraImplementation : MonoBehaviour
     /// <param name="destination"></param>
     /// <param name="teamId"></param>
     /// <returns></returns>
-    public List<HexTile> DijkstraToBuilding(HexTile start, List<Buildings> destination, int teamId)
+    public List<DijkstraInfo> DijkstraToBuilding(DijkstraInfo start, List<Buildings> destination, int teamId)
     {
-        List<HexTile> temp = new List<HexTile>();
+        List<DijkstraInfo> temp = new List<DijkstraInfo>();
         bool destinationFound = false;
         bool noValidPath = false;
         open.Add(start);
-        HexTile destinationTile = new HexTile();
+        DijkstraInfo destinationTile = new DijkstraInfo();
 
         AddConnectionsToOpen(start);
 
         while (!destinationFound && !noValidPath)
         {
-            HexTile tile = GetLowestCost();
+            DijkstraInfo tile = GetLowestCost();
             for(int i = 0; i < GlobalAttributes.Global.Buildings.Count; ++i)
             {
-                if(GlobalAttributes.Global.Buildings[i].hexTransform.Position == tile.hexTransform.Position)
+                if(GlobalAttributes.Global.Buildings[i].hexTransform.Position == tile.GetComponent<HexTile>().hexTransform.Position)
                 {
                     for(int j = 0; j < destination.Count; ++j)
                     {
@@ -107,14 +105,14 @@ public class DijkstraImplementation : MonoBehaviour
 
         if (destinationFound)
         {
-            HexTile tempTile = destinationTile;
+            DijkstraInfo tempTile = destinationTile;
             // THIS NEEDS TO LOOK FOR A TILE ON THE building's exclusion zone
             //tempTile.hexTransform.position = destination.hexTransform.position;
             while (tempTile != start && tempTile != null)
             {
                 temp.Add(tempTile);
                 //tempTile.SetColour(Color.magenta);
-                tempTile = tempTile.DI.root;
+                tempTile = (DijkstraInfo)tempTile.root;
             }
 
             temp.Reverse();
@@ -130,19 +128,19 @@ public class DijkstraImplementation : MonoBehaviour
     /// <typeparam name="T">Type to find on destination tile</typeparam>
     /// <param name="start">Tile to start from</param>
     /// <returns>List of tiles between the start and found tile</returns>
-    public List<HexTile> Dijkstra<T>(HexTile start)
+    public List<DijkstraInfo> Dijkstra<T>(DijkstraInfo start)
     {
-        List<HexTile> temp = new List<HexTile>();
+        List<DijkstraInfo> temp = new List<DijkstraInfo>();
         bool destinationFound = false;
         bool noValidPath = false;
         open.Add(start);
-        HexTile destination = new HexTile();
+        DijkstraInfo destination = new DijkstraInfo();
 
         AddConnectionsToOpen(start);
 
         while (!destinationFound && !noValidPath)
         {
-            HexTile tile = GetLowestCost();
+            DijkstraInfo tile = GetLowestCost();
             if (tile != null && tile != destination)
             {
                 AddConnectionsToOpen(tile);
@@ -160,12 +158,12 @@ public class DijkstraImplementation : MonoBehaviour
 
         if (destinationFound)
         {
-            HexTile tempTile = destination;
+            DijkstraInfo tempTile = destination;
             while (tempTile != start && tempTile != null)
             {
                 temp.Add(tempTile);
                 //tempTile.SetColour(Color.magenta);
-                tempTile = tempTile.DI.root;
+                tempTile = (DijkstraInfo)tempTile.root;
             }
 
             temp.Reverse();
@@ -176,19 +174,19 @@ public class DijkstraImplementation : MonoBehaviour
     }
 
 
-    HexTile GetLowestCost()
+    DijkstraInfo GetLowestCost()
     {
         if (open.Count > 0)
         {
-            HexTile tempTile = open[0];
-            float lowestCost = tempTile.DI.costSoFar;
+            DijkstraInfo tempTile = open[0];
+            float lowestCost = tempTile.costSoFar;
             if (open.Count > 1)
             {
                 for (int i = 1; i < open.Count; ++i)
                 {
-                    if (open[i].DI.costSoFar < lowestCost)
+                    if (open[i].costSoFar < lowestCost)
                     {
-                        lowestCost = open[i].DI.costSoFar;
+                        lowestCost = open[i].costSoFar;
                         tempTile = open[i];
                     }
                 }
@@ -199,11 +197,11 @@ public class DijkstraImplementation : MonoBehaviour
         return null;
     }
 
-    void AddConnectionsToOpen(HexTile hex)
+    void AddConnectionsToOpen(DijkstraInfo hex)
     {
         if(hex != null)
         {
-            foreach(HexTile c in hex.Connections)
+            foreach(DijkstraInfo c in hex.Connections)
             {
                 //If the tested tile has connections it is not impassable
                 if (c.Connections.Count > 0)
@@ -211,13 +209,13 @@ public class DijkstraImplementation : MonoBehaviour
                     if (!open.Contains(c) && !closed.Contains(c))
                     {
                         open.Add(c);
-                        c.DI.costSoFar = hex.DI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f);
-                        c.DI.root = hex;
+                        c.costSoFar = hex.costSoFar + (c.cost / 2f) + (hex.cost / 2f);
+                        c.root = hex;
                     }
-                    else if (c.DI.costSoFar > hex.DI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f))
+                    else if (c.costSoFar > hex.costSoFar + (c.cost / 2f) + (hex.cost / 2f))
                     {
-                        c.DI.costSoFar = hex.DI.costSoFar + (c.traverseSpeed / 2f) + (hex.traverseSpeed / 2f);
-                        c.DI.root = hex;
+                        c.costSoFar = hex.costSoFar + (c.cost / 2f) + (hex.cost / 2f);
+                        c.root = hex;
                         if (closed.Contains(c))
                         {
                             closed.Remove(c);
@@ -263,21 +261,5 @@ public class DijkstraImplementation : MonoBehaviour
                 break;
         }
     }*/
-
-	// Use this for initialization
-	void Start () {
-        DJI = this;
-
-    }
-	
-	// Update is called once per frame
-	void Update ()
-    {
-	
-	}
-
-    void OnDestroy()
-    {
-        DJI = null;
-    }
+    
 }

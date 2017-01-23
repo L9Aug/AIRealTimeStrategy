@@ -14,7 +14,9 @@ public class BaseUnit : GameEntity
     public StateMachine unitStateMachine;
 
     public State move;
-    public List<HexTile> path;
+    public List<AStarInfo<HexTile>> path;
+
+    public ASImplementation<HexTile> aStar;
 
     // Use this for initialization
     void Start()
@@ -32,12 +34,12 @@ public class BaseUnit : GameEntity
     {
         if (path.Count > 0)
         {
-            Vector3 temp = SteeringBehaviours.Arrive(this, path[0], 0.1f, 0.1f);
+            Vector3 temp = SteeringBehaviours.Arrive(this, path[0].current, 0.1f, 0.1f);
             transform.Translate(temp);
 
-            if (Vector3.Distance(transform.position, path[0].transform.position) < 0.2f)
+            if (Vector3.Distance(transform.position, path[0].current.transform.position) < 0.2f)
             {
-                hexTransform.Position = path[0].hexTransform.Position;
+                hexTransform.Position = path[0].current.hexTransform.Position;
                 path.RemoveAt(0);
             }
         }
