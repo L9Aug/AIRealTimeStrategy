@@ -1,5 +1,0 @@
-stone wall 4 (1) http://opengameart.org/node/8038
-
-wood floor 2 http://opengameart.org/node/8051
-
-00water-texture http://opengameart.org/node/10599
